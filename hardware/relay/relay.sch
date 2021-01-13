@@ -1,0 +1,593 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L 000-local-symbol:ATTINY85-20SU-atmel U1
+U 1 1 58F127CC
+P 3650 2050
+F 0 "U1" H 2500 2450 50  0000 C CNN
+F 1 "ATTINY85-20SU" H 4650 1650 50  0000 C CNN
+F 2 "Housings_SOIC:SOIC-8_3.9x4.9mm_Pitch1.27mm" H 4600 2050 50  0001 C CIN
+F 3 "" H 3650 2050 50  0001 C CNN
+	1    3650 2050
+	-1   0    0    -1  
+$EndComp
+$Comp
+L 000-local-symbol:ATTINY85-20PU-atmel U2
+U 1 1 58F1285B
+P 3650 3450
+F 0 "U2" H 2500 3850 50  0000 C CNN
+F 1 "ATTINY85-20PU" H 4650 3050 50  0000 C CNN
+F 2 "Housings_DIP:DIP-8_W7.62mm_Socket" H 4650 3450 50  0001 C CIN
+F 3 "" H 3650 3450 50  0001 C CNN
+	1    3650 3450
+	-1   0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR01
+U 1 1 58F128AA
+P 7400 900
+F 0 "#PWR01" H 7400 750 50  0001 C CNN
+F 1 "+3.3V" H 7400 1040 50  0000 C CNN
+F 2 "" H 7400 900 50  0001 C CNN
+F 3 "" H 7400 900 50  0001 C CNN
+	1    7400 900 
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR02
+U 1 1 58F128C2
+P 8100 1400
+F 0 "#PWR02" H 8100 1150 50  0001 C CNN
+F 1 "GND" H 8100 1250 50  0000 C CNN
+F 2 "" H 8100 1400 50  0001 C CNN
+F 3 "" H 8100 1400 50  0001 C CNN
+	1    8100 1400
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+12V #PWR012
+U 1 1 58F128DA
+P 8100 900
+F 0 "#PWR012" H 8100 750 50  0001 C CNN
+F 1 "+12V" H 8100 1040 50  0000 C CNN
+F 2 "" H 8100 900 50  0001 C CNN
+F 3 "" H 8100 900 50  0001 C CNN
+	1    8100 900 
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x04_Odd_Even J3
+U 1 1 58F12929
+P 7700 1100
+F 0 "J3" H 7700 1350 50  0000 C CNN
+F 1 "CONN_02X04" H 7700 850 50  0000 C CNN
+F 2 "Pin_Headers:Pin_Header_Straight_2x04_Pitch2.54mm" H 7700 -100 50  0001 C CNN
+F 3 "" H 7700 -100 50  0001 C CNN
+	1    7700 1100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 58F129A8
+P 7550 2800
+F 0 "R2" V 7630 2800 50  0000 C CNN
+F 1 "3k3" V 7550 2800 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 7480 2800 50  0001 C CNN
+F 3 "" H 7550 2800 50  0001 C CNN
+	1    7550 2800
+	0    1    1    0   
+$EndComp
+$Comp
+L Transistor_BJT:BC817 Q1
+U 1 1 58F129E1
+P 8100 2800
+F 0 "Q1" H 8300 2875 50  0000 L CNN
+F 1 "BC817-40" H 8300 2800 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23_Handsoldering" H 8300 2725 50  0001 L CIN
+F 3 "" H 8100 2800 50  0001 L CNN
+	1    8100 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Transistor_BJT:BC817 Q2
+U 1 1 58F12BD9
+P 8100 4750
+F 0 "Q2" H 8300 4825 50  0000 L CNN
+F 1 "BC817-40" H 8300 4750 50  0000 L CNN
+F 2 "TO_SOT_Packages_SMD:SOT-23_Handsoldering" H 8300 4675 50  0001 L CIN
+F 3 "" H 8100 4750 50  0001 L CNN
+	1    8100 4750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R5
+U 1 1 58F12C69
+P 7800 5000
+F 0 "R5" V 7880 5000 50  0000 C CNN
+F 1 "100k" V 7800 5000 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 7730 5000 50  0001 C CNN
+F 3 "" H 7800 5000 50  0001 C CNN
+	1    7800 5000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R3
+U 1 1 58F12D1F
+P 7550 4750
+F 0 "R3" V 7630 4750 50  0000 C CNN
+F 1 "3k3" V 7550 4750 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 7480 4750 50  0001 C CNN
+F 3 "" H 7550 4750 50  0001 C CNN
+	1    7550 4750
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R1
+U 1 1 58F12D6F
+P 6100 1550
+F 0 "R1" V 6180 1550 50  0000 C CNN
+F 1 "1k2" V 6100 1550 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 6030 1550 50  0001 C CNN
+F 3 "" H 6100 1550 50  0001 C CNN
+	1    6100 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:R R4
+U 1 1 58F12DC4
+P 7800 3050
+F 0 "R4" V 7880 3050 50  0000 C CNN
+F 1 "100k" V 7800 3050 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 7730 3050 50  0001 C CNN
+F 3 "" H 7800 3050 50  0001 C CNN
+	1    7800 3050
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:LED LED1
+U 1 1 58F12E28
+P 6100 1150
+F 0 "LED1" H 6100 1250 50  0000 C CNN
+F 1 "RED" H 6100 1050 50  0000 C CNN
+F 2 "LEDs:LED_0805_HandSoldering" H 6100 1150 50  0001 C CNN
+F 3 "" H 6100 1150 50  0001 C CNN
+	1    6100 1150
+	0    -1   -1   0   
+$EndComp
+$Comp
+L 000-local-symbol:GS3-conn J1
+U 1 1 58F12F00
+P 7150 2800
+F 0 "J1" H 7200 3000 50  0000 C CNN
+F 1 "GS3" H 7200 2601 50  0000 C CNN
+F 2 "Connectors:GS3" V 7238 2726 50  0001 C CNN
+F 3 "" H 7150 2800 50  0001 C CNN
+	1    7150 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L 000-local-symbol:GS3-conn J2
+U 1 1 58F12F51
+P 7150 4750
+F 0 "J2" H 7200 4950 50  0000 C CNN
+F 1 "GS3" H 7200 4551 50  0000 C CNN
+F 2 "Connectors:GS3" V 7238 4676 50  0001 C CNN
+F 3 "" H 7150 4750 50  0001 C CNN
+	1    7150 4750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 1400 6100 1300
+$Comp
+L power:+3.3V #PWR04
+U 1 1 58F13540
+P 6100 900
+F 0 "#PWR04" H 6100 750 50  0001 C CNN
+F 1 "+3.3V" H 6100 1040 50  0000 C CNN
+F 2 "" H 6100 900 50  0001 C CNN
+F 3 "" H 6100 900 50  0001 C CNN
+	1    6100 900 
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6100 900  6100 1000
+Wire Wire Line
+	6100 1700 6100 1850
+$Comp
+L power:GND #PWR05
+U 1 1 58F138B7
+P 7800 3300
+F 0 "#PWR05" H 7800 3050 50  0001 C CNN
+F 1 "GND" H 7800 3150 50  0000 C CNN
+F 2 "" H 7800 3300 50  0001 C CNN
+F 3 "" H 7800 3300 50  0001 C CNN
+	1    7800 3300
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR06
+U 1 1 58F138E9
+P 8200 3300
+F 0 "#PWR06" H 8200 3050 50  0001 C CNN
+F 1 "GND" H 8200 3150 50  0000 C CNN
+F 2 "" H 8200 3300 50  0001 C CNN
+F 3 "" H 8200 3300 50  0001 C CNN
+	1    8200 3300
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7300 2800 7400 2800
+Wire Wire Line
+	7700 2800 7800 2800
+Wire Wire Line
+	7800 2900 7800 2800
+Connection ~ 7800 2800
+Wire Wire Line
+	7700 4750 7800 4750
+Wire Wire Line
+	7300 4750 7400 4750
+Wire Wire Line
+	7800 4850 7800 4750
+Connection ~ 7800 4750
+Wire Wire Line
+	8200 3000 8200 3300
+Wire Wire Line
+	7800 3200 7800 3300
+$Comp
+L power:GND #PWR07
+U 1 1 58F13D96
+P 7800 5250
+F 0 "#PWR07" H 7800 5000 50  0001 C CNN
+F 1 "GND" H 7800 5100 50  0000 C CNN
+F 2 "" H 7800 5250 50  0001 C CNN
+F 3 "" H 7800 5250 50  0001 C CNN
+	1    7800 5250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR08
+U 1 1 58F144FB
+P 8200 5250
+F 0 "#PWR08" H 8200 5000 50  0001 C CNN
+F 1 "GND" H 8200 5100 50  0000 C CNN
+F 2 "" H 8200 5250 50  0001 C CNN
+F 3 "" H 8200 5250 50  0001 C CNN
+	1    8200 5250
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8200 4950 8200 5250
+Wire Wire Line
+	7800 5150 7800 5250
+Text Label 6600 2900 0    60   ~ 0
+L1
+Text Label 6600 2700 0    60   ~ 0
+L1/SDA
+Wire Wire Line
+	6600 2700 7000 2700
+Wire Wire Line
+	6600 2900 7000 2900
+Text Label 6600 4650 0    60   ~ 0
+L2/SCL
+Text Label 6600 4850 0    60   ~ 0
+L2
+Wire Wire Line
+	6600 4850 7000 4850
+Wire Wire Line
+	6600 4650 7000 4650
+Text Label 8200 4250 0    60   ~ 0
+R_L2
+Text Label 8200 2250 0    60   ~ 0
+R_L1
+$Comp
+L power:+3.3V #PWR09
+U 1 1 58F159EA
+P 2100 1550
+F 0 "#PWR09" H 2100 1400 50  0001 C CNN
+F 1 "+3.3V" H 2100 1690 50  0000 C CNN
+F 2 "" H 2100 1550 50  0001 C CNN
+F 3 "" H 2100 1550 50  0001 C CNN
+	1    2100 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR010
+U 1 1 58F15ADF
+P 2100 2950
+F 0 "#PWR010" H 2100 2800 50  0001 C CNN
+F 1 "+3.3V" H 2100 3090 50  0000 C CNN
+F 2 "" H 2100 2950 50  0001 C CNN
+F 3 "" H 2100 2950 50  0001 C CNN
+	1    2100 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR011
+U 1 1 58F15B11
+P 2100 2500
+F 0 "#PWR011" H 2100 2250 50  0001 C CNN
+F 1 "GND" H 2100 2350 50  0000 C CNN
+F 2 "" H 2100 2500 50  0001 C CNN
+F 3 "" H 2100 2500 50  0001 C CNN
+	1    2100 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0103
+U 1 1 58F15B43
+P 2100 3900
+F 0 "#PWR0103" H 2100 3650 50  0001 C CNN
+F 1 "GND" H 2100 3750 50  0000 C CNN
+F 2 "" H 2100 3900 50  0001 C CNN
+F 3 "" H 2100 3900 50  0001 C CNN
+	1    2100 3900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	2300 1800 2100 1800
+Wire Wire Line
+	2100 1550 2100 1800
+Wire Wire Line
+	2300 2300 2100 2300
+Wire Wire Line
+	2100 2200 2100 2300
+Wire Wire Line
+	2100 3200 2300 3200
+Wire Wire Line
+	2300 3700 2100 3700
+Wire Wire Line
+	2100 3700 2100 3900
+Text Label 5200 2300 0    60   ~ 0
+#RESET
+Text Label 5200 2200 0    60   ~ 0
+LED_PWM
+Text Label 5200 2100 0    60   ~ 0
+L1
+Text Label 5200 2000 0    60   ~ 0
+L2/SCL
+Text Label 5200 1900 0    60   ~ 0
+L2
+Text Label 5200 1800 0    60   ~ 0
+L1/SDA
+Wire Wire Line
+	5000 1800 5200 1800
+Wire Wire Line
+	5000 1900 5200 1900
+Wire Wire Line
+	5000 2000 5200 2000
+Wire Wire Line
+	5000 2100 5200 2100
+Wire Wire Line
+	5000 2200 5200 2200
+Wire Wire Line
+	5000 2300 5200 2300
+$Comp
+L Device:C C1
+U 1 1 58F163C9
+P 2100 2050
+F 0 "C1" H 2125 2150 50  0000 L CNN
+F 1 "1uF" H 2125 1950 50  0000 L CNN
+F 2 "Capacitors_SMD:C_0805_HandSoldering" H 2138 1900 50  0001 C CNN
+F 3 "" H 2100 2050 50  0001 C CNN
+	1    2100 2050
+	1    0    0    -1  
+$EndComp
+Connection ~ 2100 1800
+Connection ~ 2100 2300
+Text Label 6100 1850 0    60   ~ 0
+LED_PWM
+$Comp
+L power:GND #PWR013
+U 1 1 58F16E75
+P 7400 1400
+F 0 "#PWR013" H 7400 1150 50  0001 C CNN
+F 1 "GND" H 7400 1250 50  0000 C CNN
+F 2 "" H 7400 1400 50  0001 C CNN
+F 3 "" H 7400 1400 50  0001 C CNN
+	1    7400 1400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7400 900  7400 1000
+Wire Wire Line
+	7400 1000 7500 1000
+Wire Wire Line
+	8000 1000 8100 1000
+Wire Wire Line
+	8100 1000 8100 900 
+Wire Wire Line
+	8000 1300 8100 1300
+Wire Wire Line
+	8100 1300 8100 1400
+Wire Wire Line
+	7500 1300 7400 1300
+Wire Wire Line
+	7400 1300 7400 1400
+Text Label 7000 1200 0    60   ~ 0
+L1/SDA
+Text Label 8200 1200 0    60   ~ 0
+L2/SCL
+Text Label 7000 1100 0    60   ~ 0
+#RESET
+Wire Wire Line
+	7000 1100 7500 1100
+Wire Wire Line
+	7000 1200 7500 1200
+Wire Wire Line
+	8000 1200 8200 1200
+Text Label 5200 3700 0    60   ~ 0
+#RESET
+Text Label 5200 3600 0    60   ~ 0
+LED_PWM
+Text Label 5200 3500 0    60   ~ 0
+L1
+Text Label 5200 3400 0    60   ~ 0
+L2/SCL
+Text Label 5200 3300 0    60   ~ 0
+L2
+Text Label 5200 3200 0    60   ~ 0
+L1/SDA
+Wire Wire Line
+	5000 3200 5200 3200
+Wire Wire Line
+	5000 3300 5200 3300
+Wire Wire Line
+	5000 3400 5200 3400
+Wire Wire Line
+	5000 3500 5200 3500
+Wire Wire Line
+	5000 3600 5200 3600
+Wire Wire Line
+	5000 3700 5200 3700
+NoConn ~ 8000 1100
+Wire Wire Line
+	2100 3200 2100 2950
+Wire Wire Line
+	9800 1800 9550 1800
+Wire Wire Line
+	9550 1800 9550 1900
+Wire Wire Line
+	9550 1900 9800 1900
+Wire Wire Line
+	9800 1700 9550 1700
+Wire Wire Line
+	9800 2000 9550 2000
+Text Label 9550 1700 0    60   ~ 0
+R_NO
+Text Label 9550 1800 0    60   ~ 0
+R_COM
+Text Label 9550 2000 0    60   ~ 0
+R_NC
+$Comp
+L power:+12V #PWR014
+U 1 1 58F2ADE8
+P 9000 3400
+F 0 "#PWR014" H 9000 3250 50  0001 C CNN
+F 1 "+12V" V 9000 3650 50  0000 C CNN
+F 2 "" H 9000 3400 50  0001 C CNN
+F 3 "" H 9000 3400 50  0001 C CNN
+	1    9000 3400
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	9300 3250 9000 3250
+Wire Wire Line
+	9300 3550 9000 3550
+Wire Wire Line
+	9300 3400 9000 3400
+Text Label 9000 3250 2    60   ~ 0
+R_L1
+Text Label 9000 3550 2    60   ~ 0
+R_L2
+Text Label 10100 3100 1    60   ~ 0
+R_NO
+Text Label 10000 3700 3    60   ~ 0
+R_COM
+$Comp
+L 000-local-symbol:HFE20-1-x-1Z-x-x-L2 RL1
+U 1 1 58F2BEAA
+P 9800 3400
+F 0 "RL1" H 10225 3550 50  0000 L CNN
+F 1 "HFE20-1-x-1Z-L2" H 10225 3450 50  0000 L CNN
+F 2 "000-local-footprint:HFE20-1_DPST_Double_Coil_Bistable" H 9800 3400 50  0001 C CNN
+F 3 "" H 9800 3400 50  0001 C CNN
+	1    9800 3400
+	1    0    0    -1  
+$EndComp
+Text Label 9900 3100 1    60   ~ 0
+R_NC
+Wire Wire Line
+	7800 2800 7900 2800
+Wire Wire Line
+	7800 4750 7900 4750
+Wire Wire Line
+	2100 1800 2100 1900
+Wire Wire Line
+	2100 2300 2100 2500
+$Comp
+L Diode:1N4007 D1
+U 1 1 5FF7573E
+P 8550 2400
+F 0 "D1" V 8504 2480 50  0000 L CNN
+F 1 "1N4007" V 8595 2480 50  0000 L CNN
+F 2 "Diodes_SMD:D_SMA_Handsoldering" H 8550 2225 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88503/1n4001.pdf" H 8550 2400 50  0001 C CNN
+	1    8550 2400
+	0    1    1    0   
+$EndComp
+$Comp
+L Diode:1N4007 D2
+U 1 1 5FF7784E
+P 8550 4350
+F 0 "D2" V 8504 4430 50  0000 L CNN
+F 1 "1N4007" V 8595 4430 50  0000 L CNN
+F 2 "Diodes_SMD:D_SMA_Handsoldering" H 8550 4175 50  0001 C CNN
+F 3 "http://www.vishay.com/docs/88503/1n4001.pdf" H 8550 4350 50  0001 C CNN
+	1    8550 4350
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	8550 4500 8200 4500
+Connection ~ 8200 4500
+Wire Wire Line
+	8200 4500 8200 4550
+Wire Wire Line
+	8550 2550 8200 2550
+Connection ~ 8200 2550
+Wire Wire Line
+	8200 2550 8200 2600
+Wire Wire Line
+	8200 2250 8200 2550
+$Comp
+L power:+12V #PWR0101
+U 1 1 5FF7E990
+P 8550 2150
+F 0 "#PWR0101" H 8550 2000 50  0001 C CNN
+F 1 "+12V" H 8550 2290 50  0000 C CNN
+F 2 "" H 8550 2150 50  0001 C CNN
+F 3 "" H 8550 2150 50  0001 C CNN
+	1    8550 2150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8550 2250 8550 2150
+$Comp
+L power:+12V #PWR0102
+U 1 1 5FF811F1
+P 8550 4100
+F 0 "#PWR0102" H 8550 3950 50  0001 C CNN
+F 1 "+12V" H 8550 4240 50  0000 C CNN
+F 2 "" H 8550 4100 50  0001 C CNN
+F 3 "" H 8550 4100 50  0001 C CNN
+	1    8550 4100
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	8550 4200 8550 4100
+Wire Wire Line
+	8200 4250 8200 4500
+$Comp
+L 000-local-symbol:CONN_01X04-conn J4
+U 1 1 58F2855C
+P 10000 1850
+F 0 "J4" H 10000 2100 50  0000 C CNN
+F 1 "CONN_01X04" V 10100 1850 50  0000 C CNN
+F 2 "000-local-footprint:SR21504VBNC" H 10000 1850 50  0001 C CNN
+F 3 "" H 10000 1850 50  0001 C CNN
+	1    10000 1850
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC

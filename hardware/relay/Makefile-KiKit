@@ -1,0 +1,69 @@
+
+.PHONY: all clean web
+
+BOARDS = relay relay_panel
+BOARDSFILES = $(addprefix build/, $(BOARDS:=.kicad_pcb))
+GERBERS = $(addprefix build/, $(BOARDS:=-gerber.zip))
+JLCPCB = $(addprefix build/, $(BOARDS:=-jlcpcb))
+
+
+
+all: $(GERBERS) $(JLCPCB) web
+
+
+
+build/relay.kicad_pcb: relay.kicad_pcb build
+	cp $< $@
+	
+build/relay_panel.kicad_pcb: build/relay.kicad_pcb
+	echo
+	kikit panelize grid \
+		--gridsize 4 1 \
+		--vcuts \
+		--radius 1 \
+		--space 2 \
+		--tabwidth 5 \
+		--tabheight 5 \
+		--htabs 1 \
+		--vtabs 2 \
+		--railsLr 5 \
+		$< $@
+
+
+%-gerber: %.kicad_pcb
+	echo
+	kikit export gerber $< $@
+	
+%-gerber.zip: %-gerber
+	echo
+	zip -j $@ `find $<`
+
+
+%-jlcpcb: %.kicad_pcb
+	echo
+	kikit fab jlcpcb $< $@
+
+
+
+web: build/web/index.html
+
+build:
+	mkdir -p build
+
+
+build/web: build
+	mkdir -p build/web
+
+build/web/index.html: build/web $(BOARDSFILES)
+	echo
+	kikit present boardpage \
+		-d README.md \
+		--name "IoT Universal Socket Strip" \
+		--board "Relay Board" " " build/relay.kicad_pcb \
+		--board "Relay Board Panelized" " " build/relay_panel.kicad_pcb \
+		--repository "https://github.com/anno73" \
+		build/web
+
+
+clean: 
+	rm -rf build
