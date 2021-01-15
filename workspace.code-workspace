@@ -10,7 +10,11 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"Atmel",
+			"Attiny",
+			"Bootloader",
 			"Ehmann",
+			"Engbedded",
 			"PCBs"
 		]
 	}
