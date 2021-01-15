@@ -4,6 +4,11 @@
 #include <avr/wdt.h>
 #include <avr/power.h>
 
+//#include <SendOnlySoftwareSerial.h>       // https://github.com/nickgammon/SendOnlySoftwareSerial
+
+//#include <EEPROM.h>
+//#include <EEPROMWearLevel.h>    // https://github.com/PRosenb/EEPROMWearLevel
+
 #include <TinyWireS.h>
 #ifndef TWI_RX_BUFFER_SIZE
 #define TWI_RX_BUFFER_SIZE (16)
@@ -18,13 +23,13 @@
  *   2      PB3    3/A3
  *   3      PB4    4/A2
  *   4      -       -       GND
- *   5      PB0     0
+ *   5      PB0     0       IIC SDA
  *   6      PB6     1
- *   7      PB7    2/A1
+ *   7      PB7    2/A1     IIC SCL
  *   8              -       VCC
  */
 
-const uint8_t PIN_SCL = 1;
+const uint8_t PIN_SCL = 0;
 const uint8_t PIN_SDA = 2;
 const uint8_t PIN_LED = 4;
 const uint8_t PIN_RL1 = 3;
@@ -287,6 +292,8 @@ void setup()
   pinMode(PIN_RL2, OUTPUT);
   pinMode(PIN_LED, OUTPUT);
   pinMode(PIN_BUTTON, INPUT);
+
+
 
   // Initialize IIC
   TinyWireS.begin(iicSlaveAddress);

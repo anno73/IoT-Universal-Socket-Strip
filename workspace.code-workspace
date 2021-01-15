@@ -2,7 +2,16 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"name": "relay",
+			"path": "software\\relay"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"cSpell.words": [
+			"Ehmann",
+			"PCBs"
+		]
+	}
 }
