@@ -183,6 +183,8 @@ void runAsyncAction(Action action)
   default:
     break;
   }
+
+
   return;
 } // runAsyncAction
 
@@ -269,16 +271,18 @@ void iicReceiveEventCb(uint8_t howMany)
 
   while (howMany--)
   {
-    uint8_t data = TinyWireS.receive(); // just consume for now
+    uint8_t data = TinyWireS.receive(); 
 
     switch (iicRegPosition)
     {
     // case iicRegister::STATUS:
-      // Ignore writes to STATUS register
-      // break;
+    // Ignore writes to STATUS register
+    // break;
     case iicRegister::RELAY:
 
       asyncAction = NOOP;
+
+      // todo: check if relay is frozen or not
 
       switch (data)
       {
@@ -307,17 +311,19 @@ void iicReceiveEventCb(uint8_t howMany)
       // 0: OFF, 1: ON, 2: TOGGLE, 3: Follow relay state
       switch (data)
       {
-      case 0:
+      case ledCmd::FOLLOW_RELAY:
+        // todo
+        break;
+      case ledCmd::ALWAYS_OFF:
         digitalWrite(PIN_LED, LED_OFF);
         break;
-      case 1:
+      case ledCmd::ALWAYS_ON:
         digitalWrite(PIN_LED, LED_ON);
         break;
-      case 2:
+      case ledCmd::TOGGLE:
         digitalWrite(PIN_LED, digitalRead(PIN_LED) == LED_OFF ? LED_ON : LED_OFF);
         break;
       default:
-        asyncAction = NOOP;
         break;
       }
       // Store in status register
@@ -334,14 +340,15 @@ void iicReceiveEventCb(uint8_t howMany)
       // Store in status register
       // Store in EEPROM
       break;
-    case iicRegister::VERSION:
+    // case iicRegister::VERSION:
       // Ignore writes to VERSION register
-      break;
+      // break;
     default:
       break;
     } // switch (iicRegPosition)
 
-    // i2c_regs[reg_position] = TinyWireS.receive();
+    // Advance to next register in case we got multiple data values.
+    // In case of last register roll over to first one again.
     iicRegPosition++;
     if (iicRegPosition >= iicRegSize)
     {
@@ -376,20 +383,6 @@ void setup()
   digitalWrite(PIN_LED, LED_OFF);
   // pinMode(PIN_BUTTON, INPUT);
 
-#if 0
-  while (1)
-  {
-    digitalWrite(PIN_RL1, RELAY_COIL_ON);
-    delay(1000);
-    digitalWrite(PIN_RL1, RELAY_COIL_OFF);
-    delay(1000);
-    digitalWrite(PIN_RL2, RELAY_COIL_ON);
-    delay(1000);
-    digitalWrite(PIN_RL2, RELAY_COIL_OFF);
-    delay(1000);
-  }
-#endif
-
   // Initialize IIC
   TinyWireS.begin(iicSlaveAddress);
 
@@ -407,19 +400,11 @@ void loop()
   // sleep_disable();
 
   if (asyncAction != NOOP)
+  {
     runAsyncAction(asyncAction);
+    asyncAction = NOOP;
+  }
 
   TinyWireS_stop_check();
-
-#if 0
-  static uint32_t blinkTS = 0;
-  uint32_t _now = millis();
-  if (_now - blinkTS > 1000)
-  {
-    blinkTS = _now;
-
-    digitalWrite(PIN_RL1, !digitalRead(PIN_RL1));
-  }
-#endif
 
 } // loop

@@ -36,7 +36,7 @@ namespace relayCmd {
         ON = 1,
         TOGGLE = 2,
         FREEZE = 3,
-        UNFREEZE = 4
+        UNFREEZE = 4,
     };
 }
 
@@ -47,9 +47,19 @@ namespace ledCmd
         FOLLOW_RELAY = 0,
         ALWAYS_OFF = 1,
         ALWAYS_ON = 2,
+        TOGGLE = 3,
+        FREEZE = 4,
+        UNFREEZE = 5,
         BLINK0 = 0x03,
         BLINK1 = 0x13,
         BLINK2 = 0x23,
         BLINK3 = 0x33,
+    };
+}
+
+namespace buttonCmd {
+    enum : uint8_t {
+        ENABLE = 0,
+        DISABLE = 1,
     };
 }
