@@ -1,0 +1,25 @@
+{
+	"folders": [
+		{
+			"name": "relay",
+			"path": "."
+		}
+	],
+	"settings": {
+		"cSpell.words": [
+			"Atmel",
+			"Attiny",
+			"Bootloader",
+			"Ehmann",
+			"Engbedded",
+			"PCBs",
+			"atmelavr",
+			"bblanchon",
+			"deps",
+			"digispark",
+			"nickcengel",
+			"paulstoffregen",
+			"sparkfun"
+		]
+	}
+}
