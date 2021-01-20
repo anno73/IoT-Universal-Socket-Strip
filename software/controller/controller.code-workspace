@@ -9,6 +9,7 @@
 			"DIOTWEBCONF",
 			"bblanchon",
 			"deps",
+			"millis",
 			"nodemcu",
 			"paulstoffregen"
 		]
