@@ -13,11 +13,13 @@ void setup()
 {
 
   Serial.begin(2000000);
-  Serial << endl << appName << F(" starting up...\n");
+  Serial << endl
+         << appName << F(" starting up...\n");
 
   setupIotWebConf();
   ota::setup();
   ntp::setup();
+  mqtt::setup();
   relay::setup();
 
   Serial << F("Heap: ") << system_get_free_heap_size() << endl;
@@ -37,5 +39,13 @@ void loop()
   ntp::loop();
 
   relay::loop();
+
+  if (needReset)
+  {
+    Serial << F("Reboot requested\n");
+    // iotWebConf.delay(1000);
+    delay(1000);
+    ESP.restart();
+  }
 
 } // loop
