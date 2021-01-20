@@ -17,6 +17,7 @@
 #include "ntp.h"
 #include "iotwebconf_.h"
 #include "relay.h"
+#include "../../relay/src/shared.h" // Shared data and command structures of relay
 
 #define MQTT_VERBOSE_HEARTBEAT 0
 #define MQTT_VERBOSE_RECEIVE 0
@@ -248,7 +249,7 @@ namespace mqtt
      * mqttMessageReceived
      * 
      * Process received MQTT messages
-     */    
+     */
     void mqttMessageReceived(String &topic, String &data)
     {
 #if MQTT_VERBOSE_RECEIVE > 0
@@ -312,32 +313,111 @@ namespace mqtt
 
             topic.remove(0, 5);
 
-            if (topic.startsWith("on"))
+            if (topic.startsWith("relay/"))
             {
-                uint8_t v = strtoul(data.c_str(), NULL, 10);
+                topic.remove(0, 5);
 
-                Serial << F("MQTT turn socket") << v << F("on") << endl;
-                relay::switchRelay(v, 1);
+                if (topic.startsWith("off"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT turn socket") << v << F("on") << endl;
+                    relay::switchRelay(v, relayCmd::OFF);
+                    return;
+                }
+
+                if (topic.startsWith("on"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT turn socket ") << v << F("off") << endl;
+                    relay::switchRelay(v, relayCmd::ON);
+                    return;
+                }
+
+                if (topic.startsWith("toggle"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT toggle socket ") << v << endl;
+                    relay::switchRelay(v, relayCmd::TOGGLE);
+                    return;
+                }
+
+                if (topic.startsWith("freeze"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT toggle socket ") << v << endl;
+                    relay::switchRelay(v, relayCmd::FREEZE);
+                    return;
+                }
+
+                if (topic.startsWith("unfreeze"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT toggle socket ") << v << endl;
+                    relay::switchRelay(v, relayCmd::UNFREEZE);
+                    return;
+                }
+
+                Serial << F("MQTT unknown relay command '") << topic << "'\n";
                 return;
-            }
+            } // set/relay/...
 
-            if (topic.startsWith("off"))
+            if (topic.startsWith("led/"))
             {
-                uint8_t v = strtoul(data.c_str(), NULL, 10);
+                topic.remove(0, 4);
 
-                Serial << F("MQTT turn socket ") << v << F("off") << endl;
-                relay::switchRelay(v, 0);
+                if (topic.startsWith("follow"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led follow relay ") << v << endl;
+                    relay::switchLed(v, ledCmd::FOLLOW_RELAY);
+                    return;
+                }
+
+                if (topic.startsWith("off"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led always off ") << v << endl;
+                    relay::switchLed(v, ledCmd::ALWAYS_OFF);
+                    return;
+                }
+
+                if (topic.startsWith("on"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led always on ") << v << endl;
+                    relay::switchLed(v, ledCmd::ALWAYS_ON);
+                    return;
+                }
+
+                if (topic.startsWith("freeze"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led always on ") << v << endl;
+                    relay::switchLed(v, ledCmd::FREEZE);
+                    return;
+                }
+
+                if (topic.startsWith("unfreeze"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led always on ") << v << endl;
+                    relay::switchLed(v, ledCmd::UNFREEZE);
+                    return;
+                }
+
+                Serial << F("MQTT unknown LED command '") << topic << "'\n";
                 return;
-            }
-
-            if (topic.startsWith("toggle"))
-            {
-                uint8_t v = strtoul(data.c_str(), NULL, 10);
-
-                Serial << F("MQTT toggle socket ") << v << endl;
-                relay::switchRelay(v, 2);
-                return;
-            }
+            } // set/led/...
 
             // if ( topic.startsWith(F("mode")) ) {
             //   // -2: prev, -1: next, >=0: abs

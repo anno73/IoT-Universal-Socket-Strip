@@ -13,30 +13,93 @@ namespace relay
 {
 
     /**
- * 
- * I2C
- * 
- * Default I2C pins on ESP8266
- * D1   SDA
- * D2   SCL
- * 
- */
+     * 
+     * I2C
+     * 
+     * Default I2C pins on ESP8266
+     * D1   SDA
+     * D2   SCL
+     * 
+     */
     const uint8_t PIN_SDA = D1;
     const uint8_t PIN_SCL = D2;
 
     const uint8_t MAX_IIC_RETRIES = 5;
 
-    void switchRelay(uint8_t relay, uint8_t state)
+    uint8_t sendIicCommand(uint8_t address, uint8_t iicReg, uint8_t value, uint8_t *status, uint8_t *tries)
+    {
+        *status = 255;
+        *tries = 0;
+
+        do
+        {
+            Wire.beginTransmission(address);
+            Wire.write(iicReg);
+            Wire.write(value);
+            *status = Wire.endTransmission();
+
+            // Serial << F("Write to address ") << address << F(" Status: ") << *status << F(" Try: ") << *tries << endl;
+            if (*status != 0)
+            {
+                (*tries)++;
+                delay(10);
+            }
+        } while ((*status != 0) && (*tries < MAX_IIC_RETRIES));
+
+        // All went well
+        if ((*tries) == 0)
+            return 0;
+
+        // WARNING: we had to retry the operation
+        if ((*tries) < MAX_IIC_RETRIES)
+            return 1;
+
+        // ERROR: Operation timed out: status != 0 and tries == MAX_IIC_RETRIES
+        return 2;
+
+    } // sendIicCommand
+
+    /**
+     * switchRelay
+     * 
+     */
+    void switchRelay(uint8_t addr, uint8_t state)
     {
         // Serial << F("Switch relay ") << relay << F(" to state ") << ((state > 0) ? F("ON") : F("OFF")) << "." << endl;
 
         uint8_t status = 255;
         uint8_t tries = 0;
 
+        switch (sendIicCommand(addr, iicRegister::RELAY, state, &status, &tries))
+        {
+        // case 0:
+        //     break;
+        case 1:
+            Serial << F("WARNING: Write to relay ") << addr << F(" Status: ") << status << F(" Try: ") << tries << endl;
+            break;
+        case 2:
+            Serial << F("ERROR: Write to relay ") << addr << F(" Status: ") << status << F(" Try: ") << tries << endl;
+            break;
+        // default:
+        //     break;
+        }
+
+        return;
+    } // switchRelay
+
+    /**
+     * switchLed
+     * 
+     */
+    void switchLed(uint8_t addr, uint8_t state)
+    {
+        uint8_t status = 255;
+        uint8_t tries = 0;
+
         do
         {
-            Wire.beginTransmission(relay);
-            Wire.write(iicRegister::RELAY);
+            Wire.beginTransmission(addr);
+            Wire.write(iicRegister::LED);
             Wire.write(state);
             status = Wire.endTransmission();
 
@@ -50,16 +113,16 @@ namespace relay
 
         if (status == 0 && tries != 0)
         {
-            Serial << F("WARNING: Write to relay ") << relay << F(" Status: ") << status << F(" Try: ") << tries << endl;
+            Serial << F("WARNING: Write to led ") << addr << F(" Status: ") << status << F(" Try: ") << tries << endl;
         }
 
         if (status != 0)
         {
-            Serial << F("ERROR: Write to relay ") << relay << F(" Status: ") << status << F(" Try: ") << tries << endl;
+            Serial << F("ERROR: Write to led ") << addr << F(" Status: ") << status << F(" Try: ") << tries << endl;
         }
 
         return;
-    } // switchRelay
+    } // switchLed
 
     /**
      * San IIC bus for devices and wait forever
@@ -142,7 +205,7 @@ namespace relay
         {
             switchRelay(125, relayCmd::TOGGLE);
         }
-    }   // timedToggleRelayPolled
+    } // timedToggleRelayPolled
 
     /**
      * setup()
@@ -178,6 +241,6 @@ namespace relay
         timedToggleRelayPolled(125);
 
         return;
-    }
+    } // loop
 
 } // namespace relay
