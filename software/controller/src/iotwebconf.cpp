@@ -15,7 +15,7 @@
 #include "ntp.h"
 
 // -- Configuration specific key. The value should be modified if config structure was changed.
-const char IOTWC_CONFIG_VERSION[] = "BADRGB_002";
+const char IOTWC_CONFIG_VERSION[] = "REL01";
 
 // -- When BUTTON_PIN is pulled to ground on startup, the Thing will use the initial
 //      password to build an AP. (E.g. in case of lost password)
@@ -32,7 +32,7 @@ WiFiClient wifiClient;
 ESP8266HTTPUpdateServer httpUpdateServer;
 
 // -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
-const char appName[] = "BAD_RGB";
+const char appName[] = "Socket_Strip";
 
 // -- Initial password to connect to the Thing, when it creates an own Access Point.
 const char wifiInitialApPassword[] = "12345678";
@@ -50,7 +50,7 @@ IotWebConf iotWebConf(appName, &dnsServer, &webServer, wifiInitialApPassword, IO
 // id, label
 iotwebconf::ParameterGroup iotGroupMqtt = iotwebconf::ParameterGroup("groupMqtt", "MQTT Parameters");
 // label, id
-// valueBuffer, length, 
+// valueBuffer, length,
 // defaultValue, placeholder, custom HTML
 iotwebconf::TextParameter iotMqttServer = iotwebconf::TextParameter(
     "MQTT Server", "mqttServer",
@@ -105,6 +105,7 @@ void setupIotWebConf()
   iotGroupMqtt.addItem(&iotMqttPort);
   iotGroupMqtt.addItem(&iotMqttTopicPraefix);
   iotGroupMqtt.addItem(&iotMqttConnectRetryDelay);
+  iotGroupMqtt.addItem(&iotMqttHeartbeatInterval);
   iotGroupMqtt.addItem(&iotMqttTimeTopic);
   iotWebConf.addParameterGroup(&iotGroupMqtt);
 
@@ -184,8 +185,6 @@ void iotWebConfConvertStringParameters()
   mqtt::mqttConnectRetryDelayInt = atoi(mqtt::mqttConnectRetryDelay);
 
   mqtt::mqttHeartbeatIntervalInt = atoi(mqtt::mqttHeartbeatInterval);
-
-  mqtt::mqttConnectRetryDelayInt = atoi(mqtt::mqttConnectRetryDelay);
 
   mqtt::mqttTopicPraefixLength = strlen(mqtt::mqttTopicPraefix);
 
