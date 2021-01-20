@@ -6,11 +6,38 @@ Platformio
 
 VS Code
 
-I2C TinyWireS
+I2C TinyWireSIO
 
 Does each device need to remember configuration or should it get updated by host on power up?
 
 # Supporting Stuff
+
+## Arduino related
+
+(Arduino Tutorial: Using millis() Instead of delay())[https://www.norwegiancreations.com/2017/09/arduino-tutorial-using-millis-instead-of-delay/]
+
+(Arduino Tutorial: Avoiding the Overflow Issue When Using millis() and micros())[https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/]
+
+
+## I2C Resources
+
+(I2C (Inter-Integrated Circuit) Bus Technical Overview and Frequently Asked Questions)[https://www.esacademy.com/en/library/technical-articles-and-documents/miscellaneous/i2c-bus.html]
+
+(Nick Gammon - I2C - Two-Wire Peripheral Interface - for Arduino)[http://www.gammon.com.au/forum/?id=10896]
+
+https://www.i2c-bus.org/
+
+
+
+
+## Level shifter
+
+?? Use I2C against 5V rail? ESP8266 is 5V tolerant.
+
+As it seems, a 5V powered ATTiny85 does not recognize 3.3V levels on I2C. So a level shifter needs to be used to convert to 5V levels as used by the ATTiny.
+
+(sparkfun - Bi-Directional Logic Level Converter Hookup Guide)[https://learn.sparkfun.com/tutorials/bi-directional-logic-level-converter-hookup-guide/all]
+
 
 ## Fuse Calc and Fuse Reset
 
@@ -27,7 +54,22 @@ https://arduinodiy.wordpress.com/2015/05/16/high-voltage-programmingunbricking-f
 
 ## Flash ATTiny85
 
+### High Voltage Programming
+
+(Nick Gammon - High-voltage programming for AVR chips)[http://www.gammon.com.au/forum/?id=12898]
+
 ### Flash ATTiny85
+
+### Flash digiStump Digispark USB dev board
+
+https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf
+
+
+
+https://github.com/micronucleus/micronucleus
+
+
+
 
 
 
