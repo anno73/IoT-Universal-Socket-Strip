@@ -18,6 +18,9 @@
 #include "iotwebconf_.h"
 #include "relay.h"
 
+#define MQTT_VERBOSE_HEARTBEAT 0
+#define MQTT_VERBOSE_RECEIVE 0
+
 /*
 
   Missing actions: 
@@ -38,333 +41,348 @@
 
 */
 
-namespace mqtt {
-
-const uint16_t MQTT_BUFFER_SIZE = 256;
-
-char mqttServer[MQTT_SERVER_STR_LEN] = "127.0.0.1";
-
-char mqttPort[MQTT_PORT_STR_LEN] = "1883";
-uint16_t mqttPortInt = 0;
-
-char mqttTopicPraefix[MQTT_TOPIC_PRAEFIX_STR_LEN] = "";
-uint16_t mqttTopicPraefixLength = 0;
-
-char mqttConnectRetryDelay[MQTT_CONNECT_RETRY_DELAY_STR_LEN] = "5000";
-uint16_t mqttConnectRetryDelayInt = 0;
-
-char mqttHeartbeatInterval[MQTT_HEARTBEAT_INTERVALL_STR_LEN] = "60000"; // set to 0 to turn off heartbeat
-unsigned long mqttHeartbeatIntervalInt;
-
-bool mqttDisabled = true;
-char mqttTimeTopic[MQTT_TIME_TOPIC_STR_LEN] = "";
-bool mqttTimeTopicSet = false;
-
-// wifiConnected callback indicates that MQTT can now connect to the broker
-bool needConnect = false;
-
-//MQTTClient mqttClient(MQTT_BUFFER_SIZE);
-MQTTClient mqttClient(256);
-
-void mqttSendHeartbeat();
-void mqttMessageReceived(String &, String &);
-
-//
-//
-//
-void setup()
+namespace mqtt
 {
 
-  Serial << F("Setup MQTT") << endl;
+    const uint16_t MQTT_BUFFER_SIZE = 256;
 
-  mqttClient.begin(mqttServer, mqttPortInt, wifiClient);
-  //  mqttClient.setTimeout(100);
-  mqttClient.setWill("lastWill", "disconnected", true, 0);
-  mqttClient.onMessage(mqttMessageReceived);
+    char mqttServer[MQTT_SERVER_STR_LEN] = "127.0.0.1";
 
-  // Subscribe to topics after successful connection
+    char mqttPort[MQTT_PORT_STR_LEN] = "1883";
+    uint16_t mqttPortInt = 0;
 
-  if ((mqttPort == 0) || (mqttServer[0] == '\0') || (mqttTopicPraefix[0] == '\0'))
-  {
-    Serial << F("MQTT disabled due to missing or wrong parameters given\n");
-    mqttDisabled = true;
-  }
-  else
-  {
-    mqttDisabled = false;
-  }
+    char mqttTopicPraefix[MQTT_TOPIC_PRAEFIX_STR_LEN] = "";
+    uint16_t mqttTopicPraefixLength = 0;
 
-} // setupMqttClient
+    char mqttConnectRetryDelay[MQTT_CONNECT_RETRY_DELAY_STR_LEN] = "5000";
+    uint16_t mqttConnectRetryDelayInt = 0;
 
-//
-//
-//
-bool connectMqtt()
-{
-  static unsigned long lastConnectionAttempt = 0; // persist across calls
-  unsigned long now = millis();
+    char mqttHeartbeatInterval[MQTT_HEARTBEAT_INTERVALL_STR_LEN] = "60000"; // set to 0 to turn off heartbeat
+    unsigned long mqttHeartbeatIntervalInt;
 
-  if (mqttDisabled)
-  {
-    return false;
-  }
+    bool mqttDisabled = true;
+    char mqttTimeTopic[MQTT_TIME_TOPIC_STR_LEN] = "";
+    bool mqttTimeTopicSet = false;
 
-  if (mqttConnectRetryDelayInt > now - lastConnectionAttempt)
-  {
-    // We are not due for a connection attempt
-    // Tell caller we did not connect
-    return false;
-  }
+    // wifiConnected callback indicates that MQTT can now connect to the broker
+    bool needConnect = false;
 
-  Serial << F("MQTT - Trying to connect\n");
+    //MQTTClient mqttClient(MQTT_BUFFER_SIZE);
+    MQTTClient mqttClient(256);
 
-  if (!mqttClient.connect(iotWebConf.getThingName()))
-  {
-    lastConnectionAttempt = now;
-    Serial << F("MQTT Connection to ") << mqttServer << ':' << mqttPortInt << F(" failed: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << F(". Will try again in ") << mqttConnectRetryDelayInt << F("ms") << endl;
-    return false;
-  }
+    void mqttSendHeartbeat();
+    void mqttMessageReceived(String &, String &);
 
-  Serial << F("MQTT Connected\n");
-
-  // Subscribe to required topics
-  String s;
-  s = mqttTopicPraefix;
-  s += "/#";
-  mqttClient.subscribe(s);
-  Serial << F("MQTT subscribe to ") << s << endl;
-
-  if (mqttTimeTopic[0] != 0)
-  {
-    s = mqttTimeTopic;
-    mqttClient.subscribe(s);
-    Serial << F("MQTT subscribe to ") << s << endl;
-  }
-  return true;
-} // connectMqtt
-
-//
-//
-//
-void loop()
-{
-
-  if (!mqttClient.loop())
-  {
-    //      Serial << F("MQTT client.loop error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
-  }
-
-  if ((iotWebConf.getState() == IOTWEBCONF_STATE_ONLINE) && (!mqttClient.connected()))
-  {
-    needConnect = true;
-  }
-
-  if (needConnect)
-  {
-    if (connectMqtt())
+    /**
+     * 
+     * 
+     * 
+     */
+    void setup()
     {
-      needConnect = false;
-    }
-  }
 
-  mqttSendHeartbeat();
+        Serial << F("Setup MQTT") << endl;
 
-} // loopMqtt
+        mqttClient.begin(mqttServer, mqttPortInt, wifiClient);
+        //  mqttClient.setTimeout(100);
+        mqttClient.setWill("lastWill", "disconnected", true, 0);
+        mqttClient.onMessage(mqttMessageReceived);
 
-void mqttSendHeartbeat()
-{
+        // Subscribe to topics after successful connection
 
-  static unsigned long mqttNextHeartbeat = 0;
+        if ((mqttPort == 0) || (mqttServer[0] == '\0') || (mqttTopicPraefix[0] == '\0'))
+        {
+            Serial << F("MQTT disabled due to missing or wrong parameters given\n");
+            mqttDisabled = true;
+        }
+        else
+        {
+            mqttDisabled = false;
+        }
 
-  unsigned long _now = millis();
+    } // setupMqttClient
 
-  // Send MQTT heartbeat every once in a while
-  // set mqttHeartbeatIntervalInt=0 to turn off
-  if (mqttClient.connected() && mqttHeartbeatIntervalInt && _now >= mqttNextHeartbeat)
-  {
-    String topic = mqttTopicPraefix;
-    topic += "/info/heartbeat";
-
-    const int jsonCapacity = JSON_OBJECT_SIZE(10);
-    StaticJsonDocument<jsonCapacity> doc;
-
-    //    doc["time"] = ntpClient->getFormattedTime();
-    doc["time"] = ntp::dateTimeStr(time(nullptr), "%Y-%m-%d %H:%M:%S");
-    doc["freeHeap"] = ESP.getFreeHeap();
-    doc["SSID"] = WiFi.SSID();
-    doc["RSSI"] = WiFi.RSSI();
-    doc["MAC"] = WiFi.macAddress();
-    doc["IP"] = WiFi.localIP().toString();
-
-    String json;
-    serializeJsonPretty(doc, json);
-    Serial << F("MQTT send heartbeat [") << topic << F("] with ") << json.length() << F(" bytes:\n") << json << endl;
-
-    json = ""; // serializeJson* APPENDS to target String object!
-    serializeJson(doc, json);
-    bool rc = mqttClient.publish(topic, json);
-
-    if (!rc)
+    /**
+     * connectMqtt
+     * 
+     */
+    bool connectMqtt()
     {
-      Serial << F("MQTT publish error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
-    }
-    mqttNextHeartbeat = _now + mqttHeartbeatIntervalInt;
-  }
+        static unsigned long lastConnectionAttempt = 0; // persist across calls
+        unsigned long now = millis();
 
-} // mqttSendHeartbeat
+        if (mqttDisabled)
+        {
+            return false;
+        }
 
-typedef struct _pack
-{
-  char year[5];
-  char month[3];
-  char day[3];
-  char hour[3];
-  char min[3];
-  char sec[3];
-} timeStrPack;
+        if (mqttConnectRetryDelayInt > now - lastConnectionAttempt)
+        {
+            // We are not due for a connection attempt
+            // Tell caller we did not connect
+            return false;
+        }
 
-typedef union _timeStr
-{
-  char buf[20];
-  timeStrPack pack;
-} timeStr;
+        Serial << F("MQTT - Trying to connect\n");
 
-//
-//  Process received MQTT messages
-//
-void mqttMessageReceived(String &topic, String &data)
-{
-  Serial << F("MQTT message received on '") << topic << F("' with ") << data.length() << F(" bytes: '") << data << F("'\n");
+        if (!mqttClient.connect(iotWebConf.getThingName()))
+        {
+            lastConnectionAttempt = now;
+            Serial << F("MQTT Connection to ") << mqttServer << ':' << mqttPortInt << F(" failed: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << F(". Will try again in ") << mqttConnectRetryDelayInt << F("ms") << endl;
+            return false;
+        }
 
-  //  if (strncmp(topic.c_str(), mqttTimeTopic, sizeof(mqttTimeTopic)) == 0 ) {
-  if (mqttTimeTopicSet && topic.startsWith(mqttTimeTopic))
-  {
-    Serial << F("Received Time update: ") << data << endl;
-    timeStr buf;
+        Serial << F("MQTT Connected\n");
 
-    // "2017-01-25T21:35:18"
-    //      4  3  3  3  3  3
-    strncpy(buf.buf, data.c_str(), sizeof(buf.buf));
-    buf.buf[4] = 0;
-    buf.buf[7] = 0;
-    buf.buf[10] = 0;
-    buf.buf[13] = 0;
-    buf.buf[16] = 0;
-    buf.buf[19] = 0;
-    setTime(atoi(buf.pack.hour),
-            atoi(buf.pack.min),
-            atoi(buf.pack.sec),
-            atoi(buf.pack.day),
-            atoi(buf.pack.month),
-            atoi(buf.pack.year));
+        // Subscribe to required topics
+        String s;
+        s = mqttTopicPraefix;
+        s += "/#";
+        mqttClient.subscribe(s);
+        Serial << F("MQTT subscribe to ") << s << endl;
 
-    //    timeValid = true;
+        if (mqttTimeTopic[0] != 0)
+        {
+            s = mqttTimeTopic;
+            mqttClient.subscribe(s);
+            Serial << F("MQTT subscribe to ") << s << endl;
+        }
+        return true;
+    } // connectMqtt
 
-    return;
-  }
-
-  topic.remove(0, mqttTopicPraefixLength);
-
-  Serial << F("MQTT action: ") << topic << endl;
-
-  if (topic.startsWith("/info"))
-  {
-    // Sent by us. Gracefully ignore
-    Serial << F("MQTT ignore action ") << topic << endl;
-    return;
-  }
-
-  if (topic.startsWith("/cmd/"))
-  {
-
-    topic.remove(0, 5);
-
-    if (topic.startsWith("reboot"))
+    /**
+     * loop
+     * 
+     */
+    void loop()
     {
-      needReset = true;
-      return;
-    }
 
-    Serial << F("MQTT unknown cmd '") << topic << F("'\n");
-    return;
-  } // cmd
+        if (!mqttClient.loop())
+        {
+            //      Serial << F("MQTT client.loop error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
+        }
 
-  if (topic.startsWith("/set/"))
-  {
+        if ((iotWebConf.getState() == IOTWEBCONF_STATE_ONLINE) && (!mqttClient.connected()))
+        {
+            needConnect = true;
+        }
 
-    topic.remove(0, 5);
+        if (needConnect)
+        {
+            if (connectMqtt())
+            {
+                needConnect = false;
+            }
+        }
 
-    if (topic.startsWith("on"))
+        mqttSendHeartbeat();
+
+    } // loopMqtt
+
+    /**
+     * mqttSendHeartbeat
+     * 
+     */
+    void mqttSendHeartbeat()
     {
-      uint8_t v = strtoul(data.c_str(), NULL, 10);
 
-      Serial << F("MQTT turn socket") << v << F("on") << endl;
-      relay::switchRelay(v, 1);
-      return;
-    }
+        static unsigned long mqttNextHeartbeat = 0;
 
-    if (topic.startsWith("off"))
+        unsigned long _now = millis();
+
+        // Send MQTT heartbeat every once in a while
+        // set mqttHeartbeatIntervalInt=0 to turn off
+        if (mqttClient.connected() && mqttHeartbeatIntervalInt && _now >= mqttNextHeartbeat)
+        {
+            String topic = mqttTopicPraefix;
+            topic += "/info/heartbeat";
+
+            const int jsonCapacity = JSON_OBJECT_SIZE(10);
+            StaticJsonDocument<jsonCapacity> doc;
+
+            //    doc["time"] = ntpClient->getFormattedTime();
+            doc["time"] = ntp::dateTimeStr(time(nullptr), "%Y-%m-%d %H:%M:%S");
+            doc["freeHeap"] = ESP.getFreeHeap();
+            doc["SSID"] = WiFi.SSID();
+            doc["RSSI"] = WiFi.RSSI();
+            doc["MAC"] = WiFi.macAddress();
+            doc["IP"] = WiFi.localIP().toString();
+
+            String json;
+            serializeJsonPretty(doc, json);
+
+#if MQTT_VERBOSE_HEARTBEAT > 0
+            Serial << F("MQTT send heartbeat [") << topic << F("] with ") << json.length() << F(" bytes:\n") << json << endl;
+#endif
+
+            json = ""; // serializeJson* APPENDS to target String object!
+            serializeJson(doc, json);
+            bool rc = mqttClient.publish(topic, json);
+
+            if (!rc)
+            {
+                Serial << F("MQTT publish error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
+            }
+            mqttNextHeartbeat = _now + mqttHeartbeatIntervalInt;
+        }
+
+    } // mqttSendHeartbeat
+
+    typedef struct _pack
     {
-      uint8_t v = strtoul(data.c_str(), NULL, 10);
+        char year[5];
+        char month[3];
+        char day[3];
+        char hour[3];
+        char min[3];
+        char sec[3];
+    } timeStrPack;
 
-      Serial << F("MQTT turn socket ") << v << F("off") << endl;
-      relay::switchRelay(v, 0);
-      return;
-    }
-
-    if (topic.startsWith("toggle"))
+    typedef union _timeStr
     {
-      uint8_t v = strtoul(data.c_str(), NULL, 10);
+        char buf[20];
+        timeStrPack pack;
+    } timeStr;
 
-      Serial << F("MQTT toggle socket ") << v << endl;
-      relay::switchRelay(v, 2);
-      return;
-    }
+    /**
+     * mqttMessageReceived
+     * 
+     * Process received MQTT messages
+     */    
+    void mqttMessageReceived(String &topic, String &data)
+    {
+#if MQTT_VERBOSE_RECEIVE > 0
+        Serial << F("MQTT message received on '") << topic << F("' with ") << data.length() << F(" bytes: '") << data << F("'\n");
+#endif
 
-    // if ( topic.startsWith(F("mode")) ) {
-    //   // -2: prev, -1: next, >=0: abs
-    //   int8_t v = strtoul(data.c_str(), NULL, 10);
+        if (mqttTimeTopicSet && topic.startsWith(mqttTimeTopic))
+        {
+            Serial << F("Received Time update: ") << data << endl;
+            timeStr buf;
 
-    //   Serial << F("MQTT set new mode: ") << v << endl;
-    //   // setModeRGB(v);
-    //   return;
-    // }
+            // "2017-01-25T21:35:18"
+            //      4  3  3  3  3  3
+            strncpy(buf.buf, data.c_str(), sizeof(buf.buf));
+            buf.buf[4] = 0;
+            buf.buf[7] = 0;
+            buf.buf[10] = 0;
+            buf.buf[13] = 0;
+            buf.buf[16] = 0;
+            buf.buf[19] = 0;
+            setTime(atoi(buf.pack.hour),
+                    atoi(buf.pack.min),
+                    atoi(buf.pack.sec),
+                    atoi(buf.pack.day),
+                    atoi(buf.pack.month),
+                    atoi(buf.pack.year));
 
-    // if ( topic.startsWith(F("intensity")) ) {
-    //   // -n, 0..255, +n
+            //    timeValid = true;
 
-    //   if ( data.length() == 0 )
-    //     return;
+            return;
+        } // mqttTimeTopic
 
-    //   // Is number realtive (start with +/-) or absolute (start with digit)
-    //   bool absolute = isDigit( data[0] );
+        topic.remove(0, mqttTopicPraefixLength);
 
-    //   if (absolute) {
-    //     uint8_t v = strtoul(data.c_str(), NULL, 10);
-    //     Serial << F("MQTT set new intensity: ") << v << endl;
-    //     // setAbsoluteBrightnessRGB(v);
-    //     return;
-    //   } else {
-    //     int8_t v = strtoul(data.c_str(), NULL, 10);
-    //     Serial << F("MQTT set new relative intensity: ") << v << endl;
-    //     // setRelativeBrightnessRGB(v);
-    //     return;
-    //   }
+        Serial << F("MQTT action: ") << topic << endl;
 
-    //   return;
-    // }
+        if (topic.startsWith("/info"))
+        {
+            // Sent by us. Gracefully ignore
+            Serial << F("MQTT ignore action ") << topic << endl;
+            return;
+        }
 
-    Serial << F("MQTT unknown set '") << topic << "'\n";
-    return;
-  } // set
+        if (topic.startsWith("/cmd/"))
+        {
 
-  {
-    Serial << F("MQTT unknown topic '") << topic << "'\n";
-    return;
-  }
+            topic.remove(0, 5);
 
-  // parse topic and react
-  return;
-} // mqttMessageReceived
+            if (topic.startsWith("reboot"))
+            {
+                needReset = true;
+                return;
+            }
+
+            Serial << F("MQTT unknown cmd '") << topic << F("'\n");
+            return;
+        } // cmd
+
+        if (topic.startsWith("/set/"))
+        {
+
+            topic.remove(0, 5);
+
+            if (topic.startsWith("on"))
+            {
+                uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                Serial << F("MQTT turn socket") << v << F("on") << endl;
+                relay::switchRelay(v, 1);
+                return;
+            }
+
+            if (topic.startsWith("off"))
+            {
+                uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                Serial << F("MQTT turn socket ") << v << F("off") << endl;
+                relay::switchRelay(v, 0);
+                return;
+            }
+
+            if (topic.startsWith("toggle"))
+            {
+                uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                Serial << F("MQTT toggle socket ") << v << endl;
+                relay::switchRelay(v, 2);
+                return;
+            }
+
+            // if ( topic.startsWith(F("mode")) ) {
+            //   // -2: prev, -1: next, >=0: abs
+            //   int8_t v = strtoul(data.c_str(), NULL, 10);
+
+            //   Serial << F("MQTT set new mode: ") << v << endl;
+            //   // setModeRGB(v);
+            //   return;
+            // }
+
+            // if ( topic.startsWith(F("intensity")) ) {
+            //   // -n, 0..255, +n
+
+            //   if ( data.length() == 0 )
+            //     return;
+
+            //   // Is number realtive (start with +/-) or absolute (start with digit)
+            //   bool absolute = isDigit( data[0] );
+
+            //   if (absolute) {
+            //     uint8_t v = strtoul(data.c_str(), NULL, 10);
+            //     Serial << F("MQTT set new intensity: ") << v << endl;
+            //     // setAbsoluteBrightnessRGB(v);
+            //     return;
+            //   } else {
+            //     int8_t v = strtoul(data.c_str(), NULL, 10);
+            //     Serial << F("MQTT set new relative intensity: ") << v << endl;
+            //     // setRelativeBrightnessRGB(v);
+            //     return;
+            //   }
+
+            //   return;
+            // }
+
+            Serial << F("MQTT unknown set '") << topic << "'\n";
+            return;
+        } // set
+
+        {
+            Serial << F("MQTT unknown topic '") << topic << "'\n";
+            return;
+        }
+
+        // parse topic and react
+        return;
+    } // mqttMessageReceived
 
 } // namespace mqtt
