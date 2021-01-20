@@ -3,6 +3,8 @@
 
 #include <Wire.h>
 
+#include <PolledTimeout.h>
+
 #include "relay.h"
 
 #include "../../relay/src/shared.h" // Shared data and command structures of relay
@@ -93,15 +95,15 @@ namespace relay
     /**
      *  Endlessly toggle relay on IIC address
      */
-    void endlessToggleRelais(uint8_t address)
+    void endlessToggleRelaisRaw(uint8_t address)
     {
         while (1)
         {
             Serial << F("I2C: Probing address ") << address << endl;
 
             Wire.beginTransmission(address);
-            Wire.write(iicRegister::Relay);
-            Wire.write(2);
+            Wire.write(iicRegister::RELAY);
+            Wire.write(relayCmd::TOGGLE);
             uint8_t status = Wire.endTransmission();
 
             if (status == 0)
@@ -115,27 +117,9 @@ namespace relay
             delay(1000);
             yield();
         }
-    }   // endlessToggleRelay
+    } // endlessToggleRelayRaw
 
-    void setup(void)
-    {
-
-        Serial << F("Setup relay boards") << endl;
-
-        // Setup IIC
-
-        Wire.begin(PIN_SDA, PIN_SCL);
-
-        // Initialize and check for socket controllers
-
-        // scanIicBus(115, 127);
-
-        // endlessToggleRelais(0);
-
-        return;
-    } // setup
-
-    void loop(void)
+    void timedToggleRelay(uint8_t address)
     {
         static boolean relayState = false;
         static uint32_t relayTS = 0;
@@ -148,6 +132,50 @@ namespace relay
             relayState = !relayState;
             switchRelay(125, relayState);
         }
+    } // timedToggleRelay
+
+    void timedToggleRelayPolled(uint8_t address)
+    {
+        static esp8266::polledTimeout::periodicMs tick(1000);
+
+        if (tick)
+        {
+            switchRelay(125, relayCmd::TOGGLE);
+        }
+    }   // timedToggleRelayPolled
+
+    /**
+     * setup()
+     * 
+     */
+    void setup(void)
+    {
+
+        Serial << F("Setup relay boards") << endl;
+
+        // Setup IIC
+
+        Wire.begin(PIN_SDA, PIN_SCL);
+
+        // Initialize and check for relay boards
+        // do we get response on factory IIC address (what to use? 127? 0 is all call)? If so we want to start a initialization process.
+
+        // scanIicBus(115, 127);
+
+        // endlessToggleRelais(125);
+
+        return;
+    } // setup
+
+    /**
+     * loop()
+     * 
+     */
+    void loop(void)
+    {
+        // endlessToggleRelaisRaw(125);
+        // timedToggleRelay(125);
+        timedToggleRelayPolled(125);
 
         return;
     }
