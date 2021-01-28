@@ -27,6 +27,7 @@ namespace iicRegister
         BUTTON = 3,
         ADDR = 4,
         VERSION = 5,
+        REGCOUNT = 6,   // Not really a register but an indicator on how many registers are defined
     };
 }
 
