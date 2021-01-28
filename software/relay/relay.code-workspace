@@ -10,16 +10,21 @@
 			"Atmel",
 			"Attiny",
 			"Bootloader",
+			"Digistump",
 			"Ehmann",
 			"Engbedded",
 			"PCBs",
+			"Webshop",
 			"atmelavr",
 			"bblanchon",
 			"deps",
 			"digispark",
+			"millis",
 			"nickcengel",
 			"paulstoffregen",
-			"sparkfun"
+			"simavr",
+			"sparkfun",
+			"vusb"
 		]
 	}
 }
