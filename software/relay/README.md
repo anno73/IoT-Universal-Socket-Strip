@@ -6,11 +6,34 @@ Platformio
 
 VS Code
 
-I2C TinyWireSIO
+(I2C TinyWireSIO)[https://github.com/rambo/TinyWire]
 
 Does each device need to remember configuration or should it get updated by host on power up?
 
 # Supporting Stuff
+
+## Digistump Digispark USB Dev
+
+### Windows Driver Installation
+
+https://github.com/micronucleus/micronucleus/tree/master/windows_driver_installer
+
+### Initial Flashing
+
+(Connecting and Programming Your Digispark)[http://digistump.com/wiki/digispark/tutorials/connecting]
+
+### Flash digiStump Digispark USB dev board
+
+(Digispark USB Development Board)[http://digistump.com/products/1] Webshop listing
+
+(Schematic)[https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf]
+
+(Micronucleus)[https://github.com/micronucleus/micronucleus] Bootloader
+
+
+## C/C++
+
+(Enumeration declaration)[https://en.cppreference.com/w/cpp/language/enum]
 
 ## Arduino related
 
@@ -60,15 +83,7 @@ https://arduinodiy.wordpress.com/2015/05/16/high-voltage-programmingunbricking-f
 
 ### Flash ATTiny85
 
-### Flash digiStump Digispark USB dev board
-
-https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf
-
-
-
-https://github.com/micronucleus/micronucleus
-
-
+Arduino as a programmer
 
 
 
@@ -97,7 +112,5 @@ http://ww1.microchip.com/downloads/en/appnotes/atmel-2555-internal-rc-oscillator
 https://hackaday.com/2020/12/30/improve-attiny-timing-accuracy-with-this-clock-calibrator/
 https://hackaday.io/project/176542-tiny-calibrator
 https://github.com/wagiminator/ATtiny84-TinyCalibrator
-
-
 
 
