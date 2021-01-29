@@ -6,7 +6,7 @@ Platformio
 
 VS Code
 
-(I2C TinyWireSIO)[https://github.com/rambo/TinyWire]
+[I2C TinyWireSIO](https://github.com/rambo/TinyWire)
 
 Does each device need to remember configuration or should it get updated by host on power up?
 
