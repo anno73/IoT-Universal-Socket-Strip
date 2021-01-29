@@ -22,22 +22,24 @@ namespace iicRegister
     enum : uint8_t
     {
         STATUS = 0,
-        RELAY = 1,
-        LED = 2,
-        BUTTON = 3,
-        ADDR = 4,
-        VERSION = 5,
-        REGCOUNT = 6,   // Not really a register but an indicator on how many registers are defined
+        RELAY,
+        LED,
+        BUTTON,
+        ADDR,
+        VERSION,
+        REGCOUNT, // Not really a register but an indicator on how many registers are defined; gets previous value + 1
     };
 }
 
-namespace relayCmd {
-    enum : uint8_t {
+namespace relayCmd
+{
+    enum : uint8_t
+    {
         OFF = 0,
-        ON = 1,
-        TOGGLE = 2,
-        FREEZE = 3,
-        UNFREEZE = 4,
+        ON,
+        TOGGLE,
+        FREEZE,
+        UNFREEZE,
     };
 }
 
@@ -45,22 +47,29 @@ namespace ledCmd
 {
     enum : uint8_t
     {
-        FOLLOW_RELAY = 0,
-        ALWAYS_OFF = 1,
-        ALWAYS_ON = 2,
-        TOGGLE = 3,
-        FREEZE = 4,
-        UNFREEZE = 5,
-        BLINK0 = 0x03,
-        BLINK1 = 0x13,
-        BLINK2 = 0x23,
-        BLINK3 = 0x33,
+        FOLLOW_RELAY = 0x00,
+        UNFOLLOW_RELAY,
+        OFF,
+        ON,
+        TOGGLE,
+        FREEZE,
+        UNFREEZE,
+        BLINK0 = 0x08, // Reserve for possible later implementation. Align it for easier use later on
+        BLINK1,
+        BLINK2,
+        BLINK3,
+        // Internal meta states. Only to be used in relay module.
+        // Maybe not the correct way to do it.
+        RELAY_OFF = 0xF0,
+        RELAY_ON,
     };
 }
 
-namespace buttonCmd {
-    enum : uint8_t {
+namespace buttonCmd // Button not implemented
+{
+    enum : uint8_t
+    {
         ENABLE = 0,
-        DISABLE = 1,
+        DISABLE,
     };
 }

@@ -8,7 +8,7 @@
 
 //#include <SendOnlySoftwareSerial.h>       // https://github.com/nickgammon/SendOnlySoftwareSerial
 
-//#include <EEPROM.h>
+//#include "EEPROM.h"
 //#include <EEPROMWearLevel.h>    // https://github.com/PRosenb/EEPROMWearLevel
 
 #include <TinyWireS.h> // https://github.com/nickcengel/TinyWireSio
@@ -107,76 +107,265 @@ const uint8_t LED_OFF = HIGH;
 // };
 
 // For now be conservative and define each possible register on its own. Select access via switch/case instead of array index.
+
+/**
+ * statusReg
+ * 
+ * 76543210
+ * 
+ * 0: relay status
+ *      0: off
+ *      1: on
+ * 2: led status
+ *      0: off
+ *      1: on
+ */
 volatile uint8_t statusReg = 0;
+
+/**
+ * relayReg
+ * 
+ * 76543210
+ * 
+ * 0:   on/off
+ *      0: relay off
+ *      1: relay on
+ * 1:   freeze/unfreeze
+ *      0: unfreeze
+ *      1: freeze
+ */
 volatile uint8_t relayReg = 0;
+
+/**
+ * ledReg
+ * 
+ * 76543210
+ * 
+ * 0: on/off
+ *      0: off
+ *      1: on
+ * 1:   follow relay
+ *      0: follow relay
+ *      1: switch separately
+ * 2:   freeze/unfreeze
+ *      0: unfreeze
+ *      1: freeze
+ * 3:
+ * 54:  blink rate
+ *      00
+ *      01
+ *      10
+ *      11
+ */
 volatile uint8_t ledReg = 0;
+
+/**
+ * buttonReg
+ * 
+ * 76543210
+ * 
+ * 0: on/off    Read only
+ *      0: off
+ *      1: on
+ * 1: enable/disable
+ *      0: enabled
+ *      1: disabled
+ * 2: freeze/unfreeze
+ *      0: unfreeze
+ *      1: freeze
+ */
 volatile uint8_t buttonReg = 0;
 // volatile uint8_t addrReg = 0;    // does not need to be a physical register. Is obtained from EEPROM.
 // volatile uint8_t versionReg = 0; // does not need to be a physical register. Is a constant in the code.
 
-volatile uint8_t iicRegSelected;                    // For read operations persist the selected register across IIC operations
-const uint8_t iicRegSize = iicRegister::REGCOUNT;   // How many registers we have defined
-const uint8_t iicRegLastIdx = iicRegSize - 1;       // Index of the last register for wrap around on multiple read/write operations
+volatile uint8_t iicRegSelected;                  // For read operations persist the selected register across IIC operations
+const uint8_t iicRegSize = iicRegister::REGCOUNT; // How many registers we have defined
+const uint8_t iicRegLastIdx = iicRegSize - 1;     // Index of the last register for wrap around on multiple read/write operations
 
-enum Action
-{
-    NOOP,
-    RELAY_OFF,
-    RELAY_ON,
-    RELAY_TOGGLE
-};
-
-volatile Action asyncAction = NOOP; // does is need to be volatile? Does it hurt if it is?
+volatile bool persistIicRegs; // If true, persist register values in main loop
 
 /**
- * runAsyncAction
  * 
+ * ledAction
+ * 
+ */
+void ledAction(uint8_t action)
+{
+
+    if (bitRead(ledReg, 1) == 0)
+    { // LED in follow relay mode. Only some actions allowed:
+        switch (action)
+        {
+        case ledCmd::UNFOLLOW_RELAY: // intentionally fallthrough all allowed commands.
+        case ledCmd::FOLLOW_RELAY:
+        case ledCmd::FREEZE:
+        case ledCmd::UNFREEZE:
+        case ledCmd::RELAY_OFF:
+        case ledCmd::RELAY_ON:
+            break;
+        default:
+            return;
+        }
+    }
+
+    if (bitRead(ledReg, 2) == 1)
+    { // LED in freeze mode. Only some actions allowed:
+        switch (action)
+        {
+        case ledCmd::RELAY_OFF: // intentionally fallthrough all allowed commands.
+        case ledCmd::RELAY_ON:
+        case ledCmd::FREEZE:
+        case ledCmd::UNFREEZE:
+            break;
+        default:
+            return;
+        }
+        return;
+    }
+
+    persistIicRegs = true;
+
+    switch (action)
+    {
+    case ledCmd::RELAY_OFF:
+        bitClear(ledReg, 0);
+        bitClear(statusReg, 2);
+
+        digitalWrite(PIN_LED, LED_OFF);
+        break;
+    case ledCmd::RELAY_ON:
+        bitSet(ledReg, 0);
+        bitSet(statusReg, 2);
+
+        digitalWrite(PIN_LED, LED_ON);
+        break;
+    case ledCmd::UNFOLLOW_RELAY:
+        bitClear(ledReg, 1);
+        break;
+    case ledCmd::FOLLOW_RELAY:
+        bitSet(ledReg, 1);
+
+        // Initialize LED with current relay state
+        if (bitRead(relayReg, 0) == 0)
+        {
+            ledAction(ledCmd::RELAY_OFF);
+        }
+        else
+        {
+            ledAction(ledCmd::RELAY_ON);
+        }
+        break;
+    case ledCmd::OFF:
+        bitClear(ledReg, 0);
+        bitClear(statusReg, 0);
+
+        digitalWrite(PIN_LED, LED_OFF);
+        break;
+    case ledCmd::ON:
+        bitSet(ledReg, 0);
+        bitSet(statusReg, 2);
+
+        digitalWrite(PIN_LED, LED_ON);
+        break;
+    case ledCmd::TOGGLE:
+        if (bitRead(ledReg, 0) == 0)
+        {
+            ledAction(ledCmd::ON);
+        }
+        else
+        {
+            ledAction(ledCmd::OFF);
+        }
+        break;
+    case ledCmd::UNFREEZE:
+        bitClear(ledReg, 2);
+        break;
+    case ledCmd::FREEZE:
+        bitSet(ledReg, 2);
+        break;
+    default:
+        // Unknown or unimplemented command
+        persistIicRegs = false;
+        break;
+    }
+
+    return;
+} // ledAction
+
+/**
+ * relayAction
+ * 
+ * Initial idea:
  * Execute operations that take longer than allowed in the IIC callback routine.
  * This is mainly the relay switching, as it requires some delay on the coil to properly switch.
  * 
+ * Now:
+ * Encapsulate relay operation
  */
-void runAsyncAction(Action action)
+void relayAction(uint8_t action)
 {
+
+    // If relay is in freeze state then only action allowed is unfreeze
+    if (bitRead(relayReg, 1) && (action != relayCmd::UNFREEZE))
+    {
+        return;
+    }
+
+    persistIicRegs = true;
+
     switch (action)
     {
-    case RELAY_OFF:
+    case relayCmd::OFF:
+        // if (bitRead(relayReg, 0) == 0)
+        // break;
+
         // iicRegs[IIC_REG_STATUS] &= ~1;
-        statusReg &= ~1;
-        relayReg &= ~1;
+        bitClear(statusReg, 0);
+        bitClear(relayReg, 0);
 
         digitalWrite(PIN_RL1, RELAY_COIL_ON);
         tws_delay(RELAY_SWITCH_PULSE_DURATION_MS);
         digitalWrite(PIN_RL1, RELAY_COIL_OFF);
 
-        digitalWrite(PIN_LED, LED_OFF);
+        // digitalWrite(PIN_LED, LED_OFF);
+        ledAction(ledCmd::RELAY_OFF);
         break;
-    case RELAY_ON:
+    case relayCmd::ON:
         // iicRegs[IIC_REG_STATUS] |= 1;
-        statusReg |= 1;
-        relayReg |= 1;
+        bitSet(statusReg, 0);
+        bitSet(relayReg, 0);
 
         digitalWrite(PIN_RL2, RELAY_COIL_ON);
         tws_delay(RELAY_SWITCH_PULSE_DURATION_MS);
         digitalWrite(PIN_RL2, RELAY_COIL_OFF);
 
-        digitalWrite(PIN_LED, LED_ON);
+        // digitalWrite(PIN_LED, LED_ON);
+        ledAction(ledCmd::RELAY_ON);
         break;
-    case RELAY_TOGGLE:
+    case relayCmd::TOGGLE:
         if (relayReg & 1)
         {
-            runAsyncAction(RELAY_OFF);
+            relayAction(relayCmd::OFF);
         }
         else
         {
-            runAsyncAction(RELAY_ON);
+            relayAction(relayCmd::ON);
         }
         break;
+    case relayCmd::FREEZE:
+        bitSet(relayReg, 1);
+        break;
+    case relayCmd::UNFREEZE:
+        bitClear(relayReg, 1);
+        break;
     default:
+        // Unknown or unimplemented command
+        persistIicRegs = false;
         break;
     }
 
     return;
-} // runAsyncAction
+} // relayAction
 
 /**
  *  iicRequestEventCb
@@ -197,13 +386,13 @@ void iicRequestEventCb()
         TinyWireS.send(statusReg);
         break;
     case iicRegister::RELAY:
-        TinyWireS.send(0xF1);
+        TinyWireS.send(relayReg);
         break;
     case iicRegister::LED:
-        TinyWireS.send(0xF2);
+        TinyWireS.send(ledReg);
         break;
     case iicRegister::BUTTON:
-        TinyWireS.send(0xF3);
+        TinyWireS.send(buttonReg);
         break;
     case iicRegister::ADDR:
         TinyWireS.send(iicSlaveAddress);
@@ -252,7 +441,7 @@ void iicReceiveEventCb(uint8_t howMany)
     iicRegSelected = TinyWireS.receive();
 
     if (iicRegSelected > iicRegLastIdx)
-        // Sanity check - non existant register requested 
+        // Sanity check - non existant register requested
         return;
 
     howMany--;
@@ -270,31 +459,23 @@ void iicReceiveEventCb(uint8_t howMany)
 
         switch (iicRegSelected)
         {
+            // We only allow operation on one attribute at a time
+
         // case iicRegister::STATUS:
         // Ignore writes to STATUS register
         // break;
         case iicRegister::RELAY:
 
-            asyncAction = NOOP;
-
-            // todo: check if relay is frozen or not
+            // asyncAction = NOOP;
 
             switch (data)
             {
-            case relayCmd::OFF:
-                // asyncAction = RELAY_OFF;
-                runAsyncAction(RELAY_OFF);
-                break;
+            case relayCmd::OFF: // fallthrough all allowed commands for relay
             case relayCmd::ON:
-                // asyncAction = RELAY_ON;
-                runAsyncAction(RELAY_ON);
-                break;
             case relayCmd::TOGGLE:
-                // asyncAction = RELAY_TOGGLE;
-                runAsyncAction(RELAY_TOGGLE);
+                relayAction(data);
                 break;
             default:
-                // asyncAction = NOOP;
                 break;
             } // switch (data)
 
@@ -306,17 +487,12 @@ void iicReceiveEventCb(uint8_t howMany)
             // 0: OFF, 1: ON, 2: TOGGLE, 3: Follow relay state
             switch (data)
             {
-            case ledCmd::FOLLOW_RELAY:
-                // todo
-                break;
-            case ledCmd::ALWAYS_OFF:
-                digitalWrite(PIN_LED, LED_OFF);
-                break;
-            case ledCmd::ALWAYS_ON:
-                digitalWrite(PIN_LED, LED_ON);
-                break;
+            case ledCmd::FOLLOW_RELAY: // fallthrough all allowed commands for LED
+            case ledCmd::UNFOLLOW_RELAY:
+            case ledCmd::OFF:
+            case ledCmd::ON:
             case ledCmd::TOGGLE:
-                digitalWrite(PIN_LED, digitalRead(PIN_LED) == LED_OFF ? LED_ON : LED_OFF);
+                ledAction(data);
                 break;
             default:
                 break;
@@ -354,8 +530,26 @@ void iicReceiveEventCb(uint8_t howMany)
 
 } // iicReceiveEventCb
 
+void readConfigFromEeprom(void)
+{
+    // Read stable part of config w/o wear leveling
+    // EEPROM.begin();
+    // EEPROM.get(0, &iicSlaveAddress);
+    // EEPROM.end();
+
+    // Read wear level protected part of config
+
+
+} // readConfigFromEeprom
+
+void writeconfigToEeprom(void)
+{
+}
+
 void setup()
 {
+
+    persistIicRegs = false;
 
     // Read config from EEPROM
     // iicSlaveAddress = 125;
@@ -367,6 +561,8 @@ void setup()
     relayReg = 0;
     ledReg = 0;
     buttonReg = 0;
+
+    readConfigFromEeprom();
 
     pinMode(PIN_RL1, OUTPUT);
     digitalWrite(PIN_RL1, RELAY_COIL_OFF);
@@ -394,10 +590,15 @@ void loop()
     // sleep_mode();
     // sleep_disable();
 
-    if (asyncAction != NOOP)
+    // if (asyncAction != NOOP)
+    // {
+    //     relayAction(asyncAction);
+    //     asyncAction = NOOP;
+    // }
+
+    if (persistIicRegs)
     {
-        runAsyncAction(asyncAction);
-        asyncAction = NOOP;
+        // Write register state to EEPROM
     }
 
     TinyWireS_stop_check();
