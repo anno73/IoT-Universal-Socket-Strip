@@ -11,7 +11,8 @@
 			"deps",
 			"millis",
 			"nodemcu",
-			"paulstoffregen"
+			"paulstoffregen",
+			"unfollow"
 		]
 	}
 }

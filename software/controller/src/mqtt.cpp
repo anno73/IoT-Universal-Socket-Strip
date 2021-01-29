@@ -379,6 +379,15 @@ namespace mqtt
                     return;
                 }
 
+                if (topic.startsWith("unfollow"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led unfollow relay ") << v << endl;
+                    relay::switchLed(v, ledCmd::UNFOLLOW_RELAY);
+                    return;
+                }
+
                 if (topic.startsWith("off"))
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
@@ -397,11 +406,20 @@ namespace mqtt
                     return;
                 }
 
-                if (topic.startsWith("freeze"))
+                if (topic.startsWith("toggle"))
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
                     Serial << F("MQTT led always on ") << v << endl;
+                    relay::switchLed(v, ledCmd::TOGGLE);
+                    return;
+                }
+                                if (topic.startsWith("freeze"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    Serial << F("MQTT led always on ") << v << endl;
+                    
                     relay::switchLed(v, ledCmd::FREEZE);
                     return;
                 }
