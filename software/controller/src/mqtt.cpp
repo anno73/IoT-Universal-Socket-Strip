@@ -393,7 +393,7 @@ namespace mqtt
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
                     Serial << F("MQTT led always off ") << v << endl;
-                    relay::switchLed(v, ledCmd::ALWAYS_OFF);
+                    relay::switchLed(v, ledCmd::OFF);
                     return;
                 }
 
@@ -402,7 +402,7 @@ namespace mqtt
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
                     Serial << F("MQTT led always on ") << v << endl;
-                    relay::switchLed(v, ledCmd::ALWAYS_ON);
+                    relay::switchLed(v, ledCmd::ON);
                     return;
                 }
 
