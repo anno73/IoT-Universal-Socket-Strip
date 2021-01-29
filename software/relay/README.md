@@ -20,33 +20,33 @@ https://github.com/micronucleus/micronucleus/tree/master/windows_driver_installe
 
 ### Initial Flashing
 
-(Connecting and Programming Your Digispark)[http://digistump.com/wiki/digispark/tutorials/connecting]
+[Connecting and Programming Your Digispark](http://digistump.com/wiki/digispark/tutorials/connecting)
 
 ### Flash digiStump Digispark USB dev board
 
-(Digispark USB Development Board)[http://digistump.com/products/1] Webshop listing
+[Digispark USB Development Board](http://digistump.com/products/1) Webshop listing
 
-(Schematic)[https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf]
+[Schematic](https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf)
 
-(Micronucleus)[https://github.com/micronucleus/micronucleus] Bootloader
+[Micronucleus](https://github.com/micronucleus/micronucleus) Bootloader
 
 
 ## C/C++
 
-(Enumeration declaration)[https://en.cppreference.com/w/cpp/language/enum]
+[Enumeration declaration](https://en.cppreference.com/w/cpp/language/enum)
 
 ## Arduino related
 
-(Arduino Tutorial: Using millis() Instead of delay())[https://www.norwegiancreations.com/2017/09/arduino-tutorial-using-millis-instead-of-delay/]
+[Arduino Tutorial: Using millis[] Instead of delay[]](https://www.norwegiancreations.com/2017/09/arduino-tutorial-using-millis-instead-of-delay/)
 
-(Arduino Tutorial: Avoiding the Overflow Issue When Using millis() and micros())[https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/]
+[Arduino Tutorial: Avoiding the Overflow Issue When Using millis[] and micros[]](https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/)
 
 
 ## I2C Resources
 
-(I2C (Inter-Integrated Circuit) Bus Technical Overview and Frequently Asked Questions)[https://www.esacademy.com/en/library/technical-articles-and-documents/miscellaneous/i2c-bus.html]
+[I2C [Inter-Integrated Circuit] Bus Technical Overview and Frequently Asked Questions](https://www.esacademy.com/en/library/technical-articles-and-documents/miscellaneous/i2c-bus.html)
 
-(Nick Gammon - I2C - Two-Wire Peripheral Interface - for Arduino)[http://www.gammon.com.au/forum/?id=10896]
+[Nick Gammon - I2C - Two-Wire Peripheral Interface - for Arduino](http://www.gammon.com.au/forum/?id=10896)
 
 https://www.i2c-bus.org/
 
@@ -59,12 +59,12 @@ https://www.i2c-bus.org/
 
 As it seems, a 5V powered ATTiny85 does not recognize 3.3V levels on I2C. So a level shifter needs to be used to convert to 5V levels as used by the ATTiny.
 
-(sparkfun - Bi-Directional Logic Level Converter Hookup Guide)[https://learn.sparkfun.com/tutorials/bi-directional-logic-level-converter-hookup-guide/all]
+[sparkfun - Bi-Directional Logic Level Converter Hookup Guide](https://learn.sparkfun.com/tutorials/bi-directional-logic-level-converter-hookup-guide/all)
 
 
 ## Fuse Calc and Fuse Reset
 
-(Engbedded Atmel AVR® Fuse Calculator)[https://www.engbedded.com/fusecalc/]
+[Engbedded Atmel AVR® Fuse Calculator](https://www.engbedded.com/fusecalc/)
 
 https://www.elektronik-labor.de/Arduino/Fuses.html
 
@@ -72,14 +72,14 @@ TinyCalibrator from below
 
 https://arduinodiy.wordpress.com/2015/05/16/high-voltage-programmingunbricking-for-attiny/
 
-(Simple and Cheap Fuse Doctor for Attiny)[https://www.instructables.com/Simple-and-cheap-Fuse-Doctor-for-Attiny/]
+[Simple and Cheap Fuse Doctor for Attiny](https://www.instructables.com/Simple-and-cheap-Fuse-Doctor-for-Attiny/)
 
 
 ## Flash ATTiny85
 
 ### High Voltage Programming
 
-(Nick Gammon - High-voltage programming for AVR chips)[http://www.gammon.com.au/forum/?id=12898]
+[Nick Gammon - High-voltage programming for AVR chips](http://www.gammon.com.au/forum/?id=12898)
 
 ### Flash ATTiny85
 
@@ -90,10 +90,10 @@ Arduino as a programmer
 
 ### Boot loader
 
-(ATtiny85 I2C Bootloader)[https://github.com/casanovg/timonel] to flash via ESP8266.
+[ATtiny85 I2C Bootloader](https://github.com/casanovg/timonel) to flash via ESP8266.
 https://www.youtube.com/watch?v=-7GOMToGvzI
 
-(Micronucleus)[https://github.com/micronucleus/micronucleus] V-USB based.
+[Micronucleus](https://github.com/micronucleus/micronucleus) V-USB based.
 
 ## Debugging
 
