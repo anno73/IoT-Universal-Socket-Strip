@@ -108,9 +108,9 @@ https://www.youtube.com/watch?v=kI_Z78a_0y0
 
 ## Calibrate RC Oscillator
 
-http://ww1.microchip.com/downloads/en/appnotes/atmel-2555-internal-rc-oscillator-calibration-for-tinyavr-and-megaavr-devices_applicationnote_avr053.pdf
-https://hackaday.com/2020/12/30/improve-attiny-timing-accuracy-with-this-clock-calibrator/
-https://hackaday.io/project/176542-tiny-calibrator
-https://github.com/wagiminator/ATtiny84-TinyCalibrator
+* http://ww1.microchip.com/downloads/en/appnotes/atmel-2555-internal-rc-oscillator-calibration-for-tinyavr-and-megaavr-devices_applicationnote_avr053.pdf
+* https://hackaday.com/2020/12/30/improve-attiny-timing-accuracy-with-this-clock-calibrator/
+* https://hackaday.io/project/176542-tiny-calibrator
+* https://github.com/wagiminator/ATtiny84-TinyCalibrator
 
 
