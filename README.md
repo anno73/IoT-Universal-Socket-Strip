@@ -23,8 +23,14 @@ Hardware, Software, Controller PCB, Switch PCB, Supporting Documents
 
 # Best Practice Tutorials
 
-(Using .gitignore the Right Way)[https://labs.consol.de/development/git/2017/02/22/gitignore.html]
-(Better manage KiCAD projects using Git)[https://medium.com/inventhub/better-manage-kicad-projects-using-git-8d06e1310af8]
+## Git
+[Using .gitignore the Right Way](https://labs.consol.de/development/git/2017/02/22/gitignore.html)
+
+https://www.xspdf.com/resolution/57309756.html
+
+
+## KiCad
+[Better manage KiCAD projects using Git](https://medium.com/inventhub/better-manage-kicad-projects-using-git-8d06e1310af8)
 
 
 
