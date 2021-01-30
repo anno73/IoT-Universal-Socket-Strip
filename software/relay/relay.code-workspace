@@ -11,6 +11,8 @@
 			"Attiny",
 			"Bootloader",
 			"Digistump",
+			"EEPIDX",
+			"EWLIDX",
 			"Ehmann",
 			"Engbedded",
 			"PCBs",

@@ -1,15 +1,29 @@
 #include <Arduino.h>
 
-#include <avr/sleep.h>
-#include <avr/wdt.h>
-#include <avr/power.h>
+// #include <avr/sleep.h>
+// #include <avr/wdt.h>
+// #include <avr/power.h>
 
 #include "shared.h"
 
 //#include <SendOnlySoftwareSerial.h>       // https://github.com/nickgammon/SendOnlySoftwareSerial
 
-//#include "EEPROM.h"
-//#include <EEPROMWearLevel.h>    // https://github.com/PRosenb/EEPROMWearLevel
+#include "EEPROM.h"
+#include <EEPROMWearLevel.h> // https://github.com/PRosenb/EEPROMWearLevel
+
+// const byte EWL_LAYOUT_VERSION = 1;
+#define EWL_LAYOUT_VERSION 1
+// const int EWL_USE_BYTES = 500;
+#define EWL_USE_BYTES 500
+
+const int EWLIDX_STATUS = 0;
+const int EWLIDX_RELAY = 1;
+const int EWLIDX_LED = 2;
+// const int EWLIDX_BUTTON = 3;
+// const int EWLIDX_COUNT = 3;
+#define EWLIDX_COUNT 3
+
+const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 
 #include <TinyWireS.h> // https://github.com/nickcengel/TinyWireSio
 #ifndef TWI_RX_BUFFER_SIZE
@@ -508,8 +522,15 @@ void iicReceiveEventCb(uint8_t howMany)
         case iicRegister::ADDR:
             // Set new IIC address during first initialization
             // Master calls Initial IIC address and updates to new one
+            if (!data || data >= 127)
+                // Sanity check on new IIC address.
+                return;
             // Store in status register
+            iicSlaveAddress = data;
             // Store in EEPROM
+            EEPROM.begin();
+            EEPROM.write(EEPIDX_IICADDR, iicSlaveAddress);
+            EEPROM.end();
             break;
         // case iicRegister::VERSION:
         // Ignore writes to VERSION register
@@ -530,21 +551,44 @@ void iicReceiveEventCb(uint8_t howMany)
 
 } // iicReceiveEventCb
 
+/**
+ * ewlSaveConfig
+ * 
+ */
+void ewlSaveConfig()
+{
+
+    EEPROMwl.update(EWLIDX_STATUS, statusReg);
+    EEPROMwl.update(EWLIDX_RELAY, relayReg);
+    EEPROMwl.update(EWLIDX_LED, ledReg);
+
+} // ewlSaveConfig
+
+/**
+ * ewlLoadConfig
+ * 
+ */
+void ewlLoadConfig()
+{
+
+    statusReg = EEPROMwl.read(EWLIDX_STATUS);
+    relayReg = EEPROMwl.read(EWLIDX_RELAY);
+    ledReg = EEPROMwl.read(EWLIDX_LED);
+
+} // ewlLoadConfig
+
 void readConfigFromEeprom(void)
 {
     // Read stable part of config w/o wear leveling
-    // EEPROM.begin();
+    EEPROM.begin();
     // EEPROM.get(0, &iicSlaveAddress);
-    // EEPROM.end();
+    iicSlaveAddress = EEPROM.read(EEPIDX_IICADDR);
+    EEPROM.end();
 
     // Read wear level protected part of config
-
+    ewlLoadConfig();
 
 } // readConfigFromEeprom
-
-void writeconfigToEeprom(void)
-{
-}
 
 void setup()
 {
@@ -562,6 +606,7 @@ void setup()
     ledReg = 0;
     buttonReg = 0;
 
+    EEPROMwl.begin(EWL_LAYOUT_VERSION, EWLIDX_COUNT, EWL_USE_BYTES);
     readConfigFromEeprom();
 
     pinMode(PIN_RL1, OUTPUT);
@@ -598,7 +643,8 @@ void loop()
 
     if (persistIicRegs)
     {
-        // Write register state to EEPROM
+        ewlSaveConfig();
+        persistIicRegs = false;
     }
 
     TinyWireS_stop_check();

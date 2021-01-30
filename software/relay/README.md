@@ -8,6 +8,8 @@ VS Code
 
 [I2C TinyWireSIO](https://github.com/rambo/TinyWire)
 
+[EEPROMWearLevel](https://github.com/PRosenb/EEPROMWearLevel)
+
 Does each device need to remember configuration or should it get updated by host on power up?
 
 # Supporting Stuff
