@@ -40,7 +40,7 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 #define TWI_RX_BUFFER_SIZE (16)
 #endif
 
-#include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
+#include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html <Watchdog.h> does not support ATTiny85
 
 void dumpEEPROM(void);
 
