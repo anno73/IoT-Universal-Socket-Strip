@@ -10,15 +10,27 @@ VS Code
 
 [EEPROMWearLevel](https://github.com/PRosenb/EEPROMWearLevel)
 
+[SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial)
+
+[Streaming](https://github.com/janelia-arduino/Streaming)
+
 Does each device need to remember configuration or should it get updated by host on power up?
 
 # Supporting Stuff
 
 ## Digistump Digispark USB Dev
 
+### Platformio tweaks
+
+I have encountered some issues with the Digistump avr package. There is missing EEPROM.h library. To resolve this I copied the original library from the arduino avr package to .platformio/packages/framework-avr-digistump/libraries package.
+There is also a lot of unnecessary noise during compilation because of moved header file locations, redefinition of #define BIN and other stuff. 
+In the end I overwrote core and variant to tiny and tinyx5 as it is used by the generic ATTiny85 definitions. Keeping the rest as it is, allowed me to program regularly via USB.
+
 ### Windows Driver Installation
 
 https://github.com/micronucleus/micronucleus/tree/master/windows_driver_installer
+
+Use [zadig](https://zadig.akeo.ie/).
 
 ### Initial Flashing
 
@@ -31,7 +43,6 @@ https://github.com/micronucleus/micronucleus/tree/master/windows_driver_installe
 [Schematic](https://s3.amazonaws.com/digistump-resources/files/97a1bb28_DigisparkSchematic.pdf)
 
 [Micronucleus](https://github.com/micronucleus/micronucleus) Bootloader
-
 
 ## C/C++
 
