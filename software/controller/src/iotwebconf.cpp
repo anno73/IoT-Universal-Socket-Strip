@@ -238,7 +238,8 @@ void handleBoot()
 //
 void wifiConnected()
 {
-  Serial << F("WiFi is connected, trigger MQTT and NTP\n");
+  Serial << F("WiFi is connected, trigger MQTT and NTP") << endl;
+  Serial << F("My IP: ") << WiFi.localIP() << endl;
 
   mqtt::needConnect = true;
   ntp::needUpdate = true; // could actually work seamless in background with ESP8266 native sntp library
