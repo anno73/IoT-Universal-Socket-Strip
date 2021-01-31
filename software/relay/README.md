@@ -22,9 +22,17 @@ Does each device need to remember configuration or should it get updated by host
 
 ### Platformio tweaks
 
+#### Switch the package
+
 I have encountered some issues with the Digistump avr package. There is missing EEPROM.h library. To resolve this I copied the original library from the arduino avr package to .platformio/packages/framework-avr-digistump/libraries package.
 There is also a lot of unnecessary noise during compilation because of moved header file locations, redefinition of #define BIN and other stuff. 
 In the end I overwrote core and variant to tiny and tinyx5 as it is used by the generic ATTiny85 definitions. Keeping the rest as it is, allowed me to program regularly via USB.
+
+#### Include (missing) libs as submodules
+
+As I did not find [SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial) and a current version of [Streaming](https://github.com/janelia-arduino/Streaming) in PlatformIO's library repository, I added these as [git submodules](https://git-scm.com/docs/gitsubmodules) in the library folder.
+See [github blog](https://github.blog/) for more information on [how to work with submodules](https://github.blog/2016-02-01-working-with-submodules/).
+Especially on initial cloning you might need to use `git clone --recursive <project url>`.
 
 ### Windows Driver Installation
 
