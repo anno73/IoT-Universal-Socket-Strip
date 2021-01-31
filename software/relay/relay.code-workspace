@@ -25,6 +25,7 @@
 			"bblanchon",
 			"deps",
 			"digispark",
+			"libc",
 			"millis",
 			"nickcengel",
 			"paulstoffregen",

@@ -14,6 +14,8 @@
 
 [Streaming](https://github.com/janelia-arduino/Streaming)
 
+[avr-libc Watchdog](https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html)
+
 Does each device need to remember configuration or should it get updated by host on power up?
 
 # Supporting Stuff

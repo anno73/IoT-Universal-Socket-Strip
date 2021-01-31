@@ -1,7 +1,6 @@
 #include <Arduino.h>
 
 // #include <avr/sleep.h>
-// #include <avr/wdt.h>
 // #include <avr/power.h>
 
 #include "shared.h"
@@ -9,14 +8,14 @@
 // #define DEBUG
 
 #ifdef DEBUG
-    #warning DEBUG enabled on target. SoftwareSerial output on LED pin.
-    const unsigned long txOnlySerialBaudRate = 115200;
-    #include <SendOnlySoftwareSerial.h> // https://github.com/nickgammon/SendOnlySoftwareSerial
-    #include <Streaming.h>              // https://github.com/janelia-arduino/Streaming
+#warning DEBUG enabled on target. SoftwareSerial output on LED pin.
+const unsigned long txOnlySerialBaudRate = 115200;
+#include <SendOnlySoftwareSerial.h> // https://github.com/nickgammon/SendOnlySoftwareSerial
+#include <Streaming.h>              // https://github.com/janelia-arduino/Streaming
 
-    #define dbg(x) txOnlySerial << x
+#define dbg(x) txOnlySerial << x
 #else
-    #define dbg(x)
+#define dbg(x)
 #endif
 
 #include "EEPROM.h"
@@ -40,6 +39,8 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 #ifndef TWI_RX_BUFFER_SIZE
 #define TWI_RX_BUFFER_SIZE (16)
 #endif
+
+#include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html
 
 void dumpEEPROM(void);
 
@@ -82,7 +83,7 @@ const uint8_t LED_ON = LOW;
 const uint8_t LED_OFF = HIGH;
 
 #ifdef DEBUG
-SendOnlySoftwareSerial txOnlySerial(PIN_LED);   // Reuse LED pin for software serial.
+SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software serial.
 #endif
 
 /*
@@ -589,9 +590,9 @@ void iicReceiveEventCb(uint8_t howMany)
 void ewlSaveConfig()
 {
 
-    dbg(F("elwSaveConfig: Status: ") << statusReg << endl);
-    dbg(F("elwSaveConfig: Relay: ") << relayReg << endl);
-    dbg(F("elwSaveConfig: LED: ") << ledReg << endl);
+    dbg(F("ewlSaveConfig: Status: ") << statusReg << endl);
+    dbg(F("ewlSaveConfig: Relay: ") << relayReg << endl);
+    dbg(F("ewlSaveConfig: LED: ") << ledReg << endl);
 
     EEPROMwl.update(EWLIDX_STATUS, statusReg);
     EEPROMwl.update(EWLIDX_RELAY, relayReg);
@@ -610,8 +611,17 @@ void ewlLoadConfig()
     relayReg = EEPROMwl.read(EWLIDX_RELAY);
     ledReg = EEPROMwl.read(EWLIDX_LED);
 
+    dbg(F("ewlLoadConfig: Status: ") << statusReg << endl);
+    dbg(F("ewlLoadConfig: Relay: ") << relayReg << endl);
+    dbg(F("ewlLoadConfig: LED: ") << ledReg << endl);
+
 } // ewlLoadConfig
 
+/**
+ * readConfigFromEeprom
+ * 
+ * Read configuration from "stable" EEPROM location and from wear leveled location
+ */
 void readConfigFromEeprom(void)
 {
     dbg(F("readConfigFromEeprom") << endl);
@@ -620,7 +630,6 @@ void readConfigFromEeprom(void)
 
     // Read stable part of config w/o wear leveling
     EEPROM.begin();
-    // EEPROM.get(0, &iicSlaveAddress);
     iicSlaveAddress = EEPROM.read(EEPIDX_IICADDR);
     EEPROM.end();
 
@@ -631,6 +640,9 @@ void readConfigFromEeprom(void)
 
 void setup()
 {
+    wdt_reset();         // reset watchdog timer
+    wdt_enable(WDTO_1S); // set watchdog timeout
+
 #ifdef DEBUG
     txOnlySerial.begin(txOnlySerialBaudRate);
 #endif
@@ -667,11 +679,11 @@ void setup()
 
     // pinMode(PIN_BUTTON, INPUT);
 
+    // During development set a fixed address
     iicSlaveAddress = 125;
 
     // Initialize IIC
     TinyWireS.begin(iicSlaveAddress);
-
     TinyWireS.onRequest(iicRequestEventCb);
     TinyWireS.onReceive(iicReceiveEventCb);
 
@@ -685,12 +697,6 @@ void loop()
     // sleep_mode();
     // sleep_disable();
 
-    // if (asyncAction != NOOP)
-    // {
-    //     relayAction(asyncAction);
-    //     asyncAction = NOOP;
-    // }
-
     if (persistIicRegs)
     {
         ewlSaveConfig();
@@ -698,6 +704,8 @@ void loop()
 
         dumpEEPROM();
     }
+
+    wdt_reset(); // reset watchdog timer
 
     TinyWireS_stop_check();
 
