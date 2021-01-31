@@ -7,11 +7,14 @@
 	],
 	"settings": {
 		"cSpell.words": [
+			"Adafruit",
 			"Atmel",
 			"Attiny",
 			"Bootloader",
+			"DDEBUG",
 			"Digistump",
 			"EEPIDX",
+			"EEPROMwl",
 			"EWLIDX",
 			"Ehmann",
 			"Engbedded",
@@ -28,7 +31,9 @@
 			"prosenb",
 			"simavr",
 			"sparkfun",
-			"vusb"
+			"tinyx",
+			"vusb",
+			"zadig"
 		]
 	}
 }

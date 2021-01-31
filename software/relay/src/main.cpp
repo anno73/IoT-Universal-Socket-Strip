@@ -6,7 +6,18 @@
 
 #include "shared.h"
 
-//#include <SendOnlySoftwareSerial.h>       // https://github.com/nickgammon/SendOnlySoftwareSerial
+// #define DEBUG
+
+#ifdef DEBUG
+    #warning DEBUG enabled on target. SoftwareSerial output on LED pin.
+    const unsigned long txOnlySerialBaudRate = 115200;
+    #include <SendOnlySoftwareSerial.h> // https://github.com/nickgammon/SendOnlySoftwareSerial
+    #include <Streaming.h>              // https://github.com/janelia-arduino/Streaming
+
+    #define dbg(x) txOnlySerial << x
+#else
+    #define dbg(x)
+#endif
 
 #include "EEPROM.h"
 #include <EEPROMWearLevel.h> // https://github.com/PRosenb/EEPROMWearLevel
@@ -29,6 +40,8 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 #ifndef TWI_RX_BUFFER_SIZE
 #define TWI_RX_BUFFER_SIZE (16)
 #endif
+
+void dumpEEPROM(void);
 
 /**
  * ATTiny85 Pin Usage
@@ -67,6 +80,10 @@ const uint8_t RELAY_COIL_ON = LOW;
 
 const uint8_t LED_ON = LOW;
 const uint8_t LED_OFF = HIGH;
+
+#ifdef DEBUG
+SendOnlySoftwareSerial txOnlySerial(PIN_LED);   // Reuse LED pin for software serial.
+#endif
 
 /*
   Operations !!! BEWARE OF FEATURE CREEP !!! Maybe creep a bit for education and fun.
@@ -206,6 +223,8 @@ volatile bool persistIicRegs; // If true, persist register values in main loop
 void ledAction(uint8_t action)
 {
 
+    dbg(F("ledAction: ") << action << endl);
+
     if (bitRead(ledReg, 1) == 0)
     { // LED in follow relay mode. Only some actions allowed:
         switch (action)
@@ -245,13 +264,17 @@ void ledAction(uint8_t action)
         bitClear(ledReg, 0);
         bitClear(statusReg, 2);
 
+#ifndef DEBUG
         digitalWrite(PIN_LED, LED_OFF);
+#endif
         break;
     case ledCmd::RELAY_ON:
         bitSet(ledReg, 0);
         bitSet(statusReg, 2);
 
+#ifndef DEBUG
         digitalWrite(PIN_LED, LED_ON);
+#endif
         break;
     case ledCmd::UNFOLLOW_RELAY:
         bitClear(ledReg, 1);
@@ -273,13 +296,17 @@ void ledAction(uint8_t action)
         bitClear(ledReg, 0);
         bitClear(statusReg, 0);
 
+#ifndef DEBUG
         digitalWrite(PIN_LED, LED_OFF);
+#endif
         break;
     case ledCmd::ON:
         bitSet(ledReg, 0);
         bitSet(statusReg, 2);
 
+#ifndef DEBUG
         digitalWrite(PIN_LED, LED_ON);
+#endif
         break;
     case ledCmd::TOGGLE:
         if (bitRead(ledReg, 0) == 0)
@@ -318,6 +345,8 @@ void ledAction(uint8_t action)
  */
 void relayAction(uint8_t action)
 {
+
+    dbg(F("relayAction: ") << action << endl);
 
     // If relay is in freeze state then only action allowed is unfreeze
     if (bitRead(relayReg, 1) && (action != relayCmd::UNFREEZE))
@@ -392,7 +421,7 @@ void iicRequestEventCb()
 {
     // uint8_t tmp;
 
-    // digitalWrite(PIN_LED, !digitalRead(PIN_LED));
+    dbg(F("iicRequestEventCb for reg ") << iicRegSelected << endl);
 
     switch (iicRegSelected)
     {
@@ -442,7 +471,7 @@ void iicRequestEventCb()
 void iicReceiveEventCb(uint8_t howMany)
 {
 
-    // digitalWrite(PIN_LED, !digitalRead(PIN_LED));
+    dbg(F("iicReceiveEventCb") << endl);
 
     if (howMany < 1)
         // Sanity check
@@ -470,6 +499,8 @@ void iicReceiveEventCb(uint8_t howMany)
     while (howMany--)
     {
         uint8_t data = TinyWireS.receive();
+
+        dbg(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
 
         switch (iicRegSelected)
         {
@@ -558,6 +589,10 @@ void iicReceiveEventCb(uint8_t howMany)
 void ewlSaveConfig()
 {
 
+    dbg(F("elwSaveConfig: Status: ") << statusReg << endl);
+    dbg(F("elwSaveConfig: Relay: ") << relayReg << endl);
+    dbg(F("elwSaveConfig: LED: ") << ledReg << endl);
+
     EEPROMwl.update(EWLIDX_STATUS, statusReg);
     EEPROMwl.update(EWLIDX_RELAY, relayReg);
     EEPROMwl.update(EWLIDX_LED, ledReg);
@@ -579,6 +614,10 @@ void ewlLoadConfig()
 
 void readConfigFromEeprom(void)
 {
+    dbg(F("readConfigFromEeprom") << endl);
+
+    dumpEEPROM();
+
     // Read stable part of config w/o wear leveling
     EEPROM.begin();
     // EEPROM.get(0, &iicSlaveAddress);
@@ -592,6 +631,12 @@ void readConfigFromEeprom(void)
 
 void setup()
 {
+#ifdef DEBUG
+    txOnlySerial.begin(txOnlySerialBaudRate);
+#endif
+
+    dbg(endl
+        << F("RELAY Module --- debug on") << endl);
 
     persistIicRegs = false;
 
@@ -615,9 +660,14 @@ void setup()
     pinMode(PIN_RL2, OUTPUT);
     digitalWrite(PIN_RL2, RELAY_COIL_OFF);
 
+#ifndef DEBUG
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, LED_OFF);
+#endif
+
     // pinMode(PIN_BUTTON, INPUT);
+
+    iicSlaveAddress = 125;
 
     // Initialize IIC
     TinyWireS.begin(iicSlaveAddress);
@@ -645,8 +695,60 @@ void loop()
     {
         ewlSaveConfig();
         persistIicRegs = false;
+
+        dumpEEPROM();
     }
 
     TinyWireS_stop_check();
 
 } // loop
+
+/**
+ * dumpEEPROM
+ * 
+ * Dumps the contents of 
+ * Function gets optimized away when DEBUG is not set.
+ * 
+ */
+void dumpEEPROM(void)
+{
+#ifdef DEBUG
+
+    unsigned int idx = 0;
+    uint8_t col = 0;
+    const uint8_t MAX_COL = 16;
+    const unsigned int EEPROM_SIZE = 512;
+
+    EEPROM.begin();
+
+    dbg(_WIDTHZ(_HEX(idx), 3) << F(" : "));
+
+    for (idx = 0; idx < EEPROM_SIZE; idx++)
+    {
+        uint8_t data = EEPROM.read(idx);
+        dbg(_WIDTHZ(_HEX(data), 2));
+        col++;
+        switch (col)
+        {
+        case 8:
+            dbg(F(" : "));
+            break;
+        case 16:
+            dbg(endl);
+            col = 0;
+            if (idx < EEPROM_SIZE - MAX_COL)
+            {
+                dbg(_WIDTHZ(_HEX(idx), 3) << F(" : "));
+            }
+            break;
+        default:
+            dbg(" ");
+            break;
+        }
+    }
+
+    EEPROM.end();
+
+#endif
+
+} // dumpEEPROM
