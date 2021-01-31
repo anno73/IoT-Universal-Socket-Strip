@@ -414,12 +414,12 @@ namespace mqtt
                     relay::switchLed(v, ledCmd::TOGGLE);
                     return;
                 }
-                                if (topic.startsWith("freeze"))
+                if (topic.startsWith("freeze"))
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
                     Serial << F("MQTT led always on ") << v << endl;
-                    
+
                     relay::switchLed(v, ledCmd::FREEZE);
                     return;
                 }
@@ -473,6 +473,74 @@ namespace mqtt
             Serial << F("MQTT unknown set '") << topic << "'\n";
             return;
         } // set
+
+        if (topic.startsWith("/get/"))
+        {
+            topic.remove(0, 5);
+
+            if (topic.startsWith("relay/"))
+            {
+                topic.remove(0, 6);
+
+                if (topic.startsWith("status"))
+                {
+                    uint8_t v = strtoul(data.c_str(), NULL, 10);
+
+                    // todo get info on relay x
+                    uint8_t status = 0;
+                    uint8_t relay = 1;
+                    uint8_t led = 2;
+                    uint8_t addr = 3;
+                    uint8_t swVers = 4;
+
+                    relay::getModule(v, &status, &relay, &led, &addr, &swVers);
+
+                    String topic = mqttTopicPraefix;
+                    topic += "/info/relay/status";
+
+                    const int jsonCapacity = JSON_OBJECT_SIZE(10);
+                    StaticJsonDocument<jsonCapacity> doc;
+
+                    doc["time"] = ntp::dateTimeStr(time(nullptr), "%Y-%m-%d %H:%M:%S");
+                    doc["relay"] = v;
+                    doc["status"] = status;
+                    doc["relay"] = relay;
+                    doc["led"] = led;
+                    doc["addr"] = addr;
+                    doc["swVers"] = swVers;
+
+                    String json;
+                    serializeJsonPretty(doc, json);
+
+#if MQTT_VERBOSE_GET > 0
+                    Serial << F("MQTT send heartbeat [") << topic << F("] with ") << json.length() << F(" bytes:\n") << json << endl;
+#endif
+
+                    json = ""; // serializeJson* APPENDS to target String object!
+                    serializeJson(doc, json);
+                    bool rc = mqttClient.publish(topic, json);
+
+                    if (!rc)
+                    {
+                        Serial << F("MQTT publish error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
+                    }
+                } // get/relay/status
+
+                Serial << F("MQTT unknown relay cmd '") << topic << F("'\n");
+                return;
+            } // get/relay
+
+            if (topic.startsWith("led/"))
+            {
+                topic.remove(0, 4);
+
+                Serial << F("MQTT unknown led cmd '") << topic << F("'\n");
+                return;
+            } // led
+
+            Serial << F("MQTT unknown get '") << topic << "'\n";
+            return;
+        } // get/led
 
         {
             Serial << F("MQTT unknown topic '") << topic << "'\n";
