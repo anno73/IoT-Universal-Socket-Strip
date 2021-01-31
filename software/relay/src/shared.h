@@ -8,6 +8,8 @@
 
 #include <Arduino.h>
 
+
+
 /**
  * The fight on a more verbose enum as there is a compile time conflict with enumerator STATUS.
  * https://en.cppreference.com/w/cpp/language/enum
@@ -27,6 +29,7 @@ namespace iicRegister
         BUTTON,
         ADDR,
         VERSION,
+        // --- Meta values
         REGCOUNT, // Not really a register but an indicator on how many registers are defined; gets previous value + 1
     };
 }
