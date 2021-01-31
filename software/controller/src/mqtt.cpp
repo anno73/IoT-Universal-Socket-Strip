@@ -315,13 +315,13 @@ namespace mqtt
 
             if (topic.startsWith("relay/"))
             {
-                topic.remove(0, 5);
+                topic.remove(0, 6);
 
                 if (topic.startsWith("off"))
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
-                    Serial << F("MQTT turn socket") << v << F("on") << endl;
+                    Serial << F("MQTT turn socket") << v << F(" off") << endl;
                     relay::switchRelay(v, relayCmd::OFF);
                     return;
                 }
@@ -330,7 +330,7 @@ namespace mqtt
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
-                    Serial << F("MQTT turn socket ") << v << F("off") << endl;
+                    Serial << F("MQTT turn socket ") << v << F(" on") << endl;
                     relay::switchRelay(v, relayCmd::ON);
                     return;
                 }
