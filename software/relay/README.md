@@ -1,10 +1,10 @@
 # Relay Board Software
 
-ATTiny85
+[ATTiny85](https://www.microchip.com/wwwproducts/en/ATtiny85)
 
-Platformio
+[PlatformIO](https://platformio.org)
 
-VS Code
+[VS Code](https://code.visualstudio.com/)
 
 [I2C TinyWireSIO](https://github.com/rambo/TinyWire)
 
@@ -70,17 +70,6 @@ Use [zadig](https://zadig.akeo.ie/).
 [Nick Gammon - I2C - Two-Wire Peripheral Interface - for Arduino](http://www.gammon.com.au/forum/?id=10896)
 
 https://www.i2c-bus.org/
-
-
-
-
-## Level shifter
-
-?? Use I2C against 5V rail? ESP8266 is 5V tolerant.
-
-As it seems, a 5V powered ATTiny85 does not recognize 3.3V levels on I2C. So a level shifter needs to be used to convert to 5V levels as used by the ATTiny.
-
-[sparkfun - Bi-Directional Logic Level Converter Hookup Guide](https://learn.sparkfun.com/tutorials/bi-directional-logic-level-converter-hookup-guide/all)
 
 
 ## Fuse Calc and Fuse Reset
