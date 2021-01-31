@@ -80,6 +80,7 @@ namespace relay
         uint8_t status = 255;
         uint8_t tries = 0;
 
+        addr += MODULE_ADDR_OFFSET;
         switch (sendIicCommand(addr, iicRegister::RELAY, state, &status, &tries))
         {
         // case 0:
@@ -106,6 +107,7 @@ namespace relay
         uint8_t status = 255;
         uint8_t tries = 0;
 
+        addr += MODULE_ADDR_OFFSET;
         switch (sendIicCommand(addr, iicRegister::LED, state, &status, &tries))
         {
         case 1:
@@ -306,8 +308,9 @@ namespace relay
                 break;
         }
 
-        Serial << F("First free IIC address: ") << freeAddr << endl;
         countSockets = freeAddr - MODULE_ADDR_OFFSET;
+        Serial << F("First free IIC address: ") << freeAddr << F(" Sockets found: ") << countSockets << endl;
+
 
         // Check if we have new devices on IIC bus and free IIC addresses left
         if (probeIicBusAddr(INITIAL_IIC_ADDRESS) == 0)
