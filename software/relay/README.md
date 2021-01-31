@@ -34,7 +34,7 @@ In the end I overwrote core and variant from [Digispark USB](https://docs.platfo
 
 #### Include (missing) libs as submodules
 
-As I did not find [SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial) and a current version of [Streaming](https://github.com/janelia-arduino/Streaming) in PlatformIO's library repository, I added these as [git submodules](https://git-scm.com/docs/gitsubmodules) in the library folder.
+As I did not find [SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial) and a current version of [Streaming](https://github.com/janelia-arduino/Streaming) in PlatformIO's library repository, I added these as [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in the library folder.
 See [github blog](https://github.blog/) for more information on [how to work with submodules](https://github.blog/2016-02-01-working-with-submodules/).
 Especially on initial cloning you might need to use `git clone --recursive <project url>`.
 
