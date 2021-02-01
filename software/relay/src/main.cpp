@@ -5,14 +5,36 @@
 
 #include "shared.h"
 
-// #define DEBUG
+#define DEBUG_EEPROM
+#define DEBUG_IIC_IO
+#define DEBUG_CONFIG
 
-#ifdef DEBUG
+#ifdef DEBUG_EEPROM
+#define DEBUG_CORE
+#define dbg_eep(x) txOnlySerial << x
+#else
+#define dbg_eep(x)
+#endif
+
+#ifdef DEBUG_IIC_IO
+#define DEBUG_CORE
+#define dbg_iic_io(x) txOnlySerial << x
+#else
+#define dbg_iic_io(x)
+#endif
+
+#ifdef DEBUG_CONFIG
+#define DEBUG_CORE
+#define dbg_cfg(x) txOnlySerial << x
+#else
+#define dbg_cfg(x)
+#endif
+
+#ifdef DEBUG_CORE
 #warning DEBUG enabled on target. SoftwareSerial output on LED pin.
 const unsigned long txOnlySerialBaudRate = 115200;
 #include <SendOnlySoftwareSerial.h> // https://github.com/nickgammon/SendOnlySoftwareSerial
 #include <Streaming.h>              // https://github.com/janelia-arduino/Streaming
-
 #define dbg(x) txOnlySerial << x
 #else
 #define dbg(x)
@@ -42,6 +64,9 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 
 #include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html <Watchdog.h> does not support ATTiny85
 
+void initIic(uint8_t);
+void iicRequestEventCb(void);
+void iicReceiveEventCb(uint8_t);
 void dumpEEPROM(void);
 
 /**
@@ -69,7 +94,8 @@ const uint8_t PIN_LED = 4;
 const uint8_t PIN_BUTTON = 5;
 
 const uint32_t IIC_BITRATE = 100000;
-volatile uint8_t iicSlaveAddress = 125;
+volatile uint8_t iicSlaveAddress = 127; // "Factory" default address for automated recognition of new modules and initialisation by controller
+// volatile uint8_t iicSlaveAddress = 125; // Test address during dev
 uint8_t softwareVersion = 0;
 
 // const uint8_t RELAY_SWITCH_PULSE_DURATION_MS = 15;
@@ -82,7 +108,7 @@ const uint8_t RELAY_COIL_ON = LOW;
 const uint8_t LED_ON = LOW;
 const uint8_t LED_OFF = HIGH;
 
-#ifdef DEBUG
+#ifdef DEBUG_CORE
 SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software serial.
 #endif
 
@@ -265,7 +291,7 @@ void ledAction(uint8_t action)
         bitClear(ledReg, 0);
         bitClear(statusReg, 2);
 
-#ifndef DEBUG
+#ifndef DEBUG_CORE
         digitalWrite(PIN_LED, LED_OFF);
 #endif
         break;
@@ -273,7 +299,7 @@ void ledAction(uint8_t action)
         bitSet(ledReg, 0);
         bitSet(statusReg, 2);
 
-#ifndef DEBUG
+#ifndef DEBUG_CORE
         digitalWrite(PIN_LED, LED_ON);
 #endif
         break;
@@ -297,7 +323,7 @@ void ledAction(uint8_t action)
         bitClear(ledReg, 0);
         bitClear(statusReg, 0);
 
-#ifndef DEBUG
+#ifndef DEBUG_CORE
         digitalWrite(PIN_LED, LED_OFF);
 #endif
         break;
@@ -305,7 +331,7 @@ void ledAction(uint8_t action)
         bitSet(ledReg, 0);
         bitSet(statusReg, 2);
 
-#ifndef DEBUG
+#ifndef DEBUG_CORE
         digitalWrite(PIN_LED, LED_ON);
 #endif
         break;
@@ -418,7 +444,7 @@ void relayAction(uint8_t action)
  * Never put more than one byte of data (with TinyWireS.send) to the send-buffer when using this callback.
  * 
  */
-void iicRequestEventCb()
+void iicRequestEventCb(void)
 {
     // uint8_t tmp;
 
@@ -484,7 +510,7 @@ void iicReceiveEventCb(uint8_t howMany)
 
     iicRegSelected = TinyWireS.receive();
 
-    if (iicRegSelected > iicRegLastIdx)
+    if ((iicRegSelected >= iicRegLastIdx) and (iicRegSelected != iicRegister::SPECIAL))
         // Sanity check - non existant register requested
         return;
 
@@ -554,19 +580,39 @@ void iicReceiveEventCb(uint8_t howMany)
         case iicRegister::ADDR:
             // Set new IIC address during first initialization
             // Master calls Initial IIC address and updates to new one
-            if (!data || data >= 127)
+            if (!data || data > 127)
                 // Sanity check on new IIC address.
                 return;
             // Store in status register
             iicSlaveAddress = data;
             // Store in EEPROM
-            EEPROM.begin();
             EEPROM.write(EEPIDX_IICADDR, iicSlaveAddress);
-            EEPROM.end();
+            // Reinitialize IIC
+            initIic(iicSlaveAddress);
             break;
-        // case iicRegister::VERSION:
-        // Ignore writes to VERSION register
-        // break;
+        case iicRegister::VERSION:
+            // Ignore writes to VERSION register
+            break;
+        case iicRegister::SPECIAL:
+            switch (data)
+            {
+            case specialCmd::RESTART:
+                break;
+            case specialCmd::CLR_EEPROM:
+                for (unsigned int addr = 0; addr < EEPROM.length(); addr++)
+                    EEPROM.write(addr, 0xFF);
+                break;
+            case specialCmd::CLR_EWL:
+                for (unsigned int addr = 0; addr < EWL_USE_BYTES; addr++)
+                    EEPROM.write(addr, 0xFF);
+                break;
+            case specialCmd::CLR_IIC_ADDR:
+                EEPROM.write(EEPIDX_IICADDR, 0xFF);
+                break;
+            default:
+                break;
+            }
+            break;
         default:
             break;
         } // switch (iicRegSelected)
@@ -590,9 +636,9 @@ void iicReceiveEventCb(uint8_t howMany)
 void ewlSaveConfig()
 {
 
-    dbg(F("ewlSaveConfig: Status: ") << statusReg << endl);
-    dbg(F("ewlSaveConfig: Relay: ") << relayReg << endl);
-    dbg(F("ewlSaveConfig: LED: ") << ledReg << endl);
+    dbg_cfg(F("ewlSaveConfig: Status: ") << statusReg << endl);
+    dbg_cfg(F("ewlSaveConfig: Relay: ") << relayReg << endl);
+    dbg_cfg(F("ewlSaveConfig: LED: ") << ledReg << endl);
 
     EEPROMwl.update(EWLIDX_STATUS, statusReg);
     EEPROMwl.update(EWLIDX_RELAY, relayReg);
@@ -611,9 +657,9 @@ void ewlLoadConfig()
     relayReg = EEPROMwl.read(EWLIDX_RELAY);
     ledReg = EEPROMwl.read(EWLIDX_LED);
 
-    dbg(F("ewlLoadConfig: Status: ") << statusReg << endl);
-    dbg(F("ewlLoadConfig: Relay: ") << relayReg << endl);
-    dbg(F("ewlLoadConfig: LED: ") << ledReg << endl);
+    dbg_cfg(F("ewlLoadConfig: Status: ") << statusReg << endl);
+    dbg_cfg(F("ewlLoadConfig: Relay: ") << relayReg << endl);
+    dbg_cfg(F("ewlLoadConfig: LED: ") << ledReg << endl);
 
 } // ewlLoadConfig
 
@@ -624,31 +670,49 @@ void ewlLoadConfig()
  */
 void readConfigFromEeprom(void)
 {
-    dbg(F("readConfigFromEeprom") << endl);
+    dbg_cfg(F("readConfigFromEeprom") << endl);
 
     dumpEEPROM();
 
     // Read stable part of config w/o wear leveling
-    EEPROM.begin();
     iicSlaveAddress = EEPROM.read(EEPIDX_IICADDR);
-    EEPROM.end();
+
+    if (iicSlaveAddress == 255)
+        iicSlaveAddress = 127;
+
+    dbg_cfg(F("iicSlaveAddress: ") << iicSlaveAddress << endl);
 
     // Read wear level protected part of config
     ewlLoadConfig();
 
 } // readConfigFromEeprom
 
+/**
+ * initIic
+ * 
+ * Re/Initialize IIC paremeters
+ */
+void initIic(uint8_t addr)
+{
+    TinyWireS.begin(addr);
+    TinyWireS.onRequest(iicRequestEventCb);
+    TinyWireS.onReceive(iicReceiveEventCb);
+} // initIic
+
+/**
+ * setup
+ * 
+ */
 void setup()
 {
     wdt_reset();         // reset watchdog timer
     wdt_enable(WDTO_1S); // set watchdog timeout
 
-#ifdef DEBUG
+#ifdef DEBUG_CORE
     txOnlySerial.begin(txOnlySerialBaudRate);
 #endif
 
-    dbg(endl
-        << F("RELAY Module --- debug on") << endl);
+    dbg(F("\nRELAY Module --- debug on\n"));
 
     persistIicRegs = false;
 
@@ -658,10 +722,10 @@ void setup()
     // LED Mode
     // Button Mode
 
-    statusReg = 0;
-    relayReg = 0;
-    ledReg = 0;
-    buttonReg = 0;
+    // statusReg = 0;
+    // relayReg = 0;
+    // ledReg = 0;
+    // buttonReg = 0;
 
     EEPROMwl.begin(EWL_LAYOUT_VERSION, EWLIDX_COUNT, EWL_USE_BYTES);
     readConfigFromEeprom();
@@ -672,7 +736,7 @@ void setup()
     pinMode(PIN_RL2, OUTPUT);
     digitalWrite(PIN_RL2, RELAY_COIL_OFF);
 
-#ifndef DEBUG
+#ifndef DEBUG_CORE
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, LED_OFF);
 #endif
@@ -680,15 +744,17 @@ void setup()
     // pinMode(PIN_BUTTON, INPUT);
 
     // During development set a fixed address
-    iicSlaveAddress = 125;
+    // iicSlaveAddress = 125;
 
     // Initialize IIC
-    TinyWireS.begin(iicSlaveAddress);
-    TinyWireS.onRequest(iicRequestEventCb);
-    TinyWireS.onReceive(iicReceiveEventCb);
+    initIic(iicSlaveAddress);
 
 } // setup
 
+/**
+ * loop
+ * 
+ */
 void loop()
 {
 
@@ -720,42 +786,37 @@ void loop()
  */
 void dumpEEPROM(void)
 {
-#ifdef DEBUG
+#ifdef DEBUG_EEPROM
 
     unsigned int idx = 0;
     uint8_t col = 0;
     const uint8_t MAX_COL = 16;
-    const unsigned int EEPROM_SIZE = 512;
 
-    EEPROM.begin();
+    dbg_eep(_WIDTHZ(_HEX(idx), 3) << F(" : "));
 
-    dbg(_WIDTHZ(_HEX(idx), 3) << F(" : "));
-
-    for (idx = 0; idx < EEPROM_SIZE; idx++)
+    for (idx = 0; idx < EEPROM.length(); idx++)
     {
         uint8_t data = EEPROM.read(idx);
-        dbg(_WIDTHZ(_HEX(data), 2));
+        dbg_eep(_WIDTHZ(_HEX(data), 2));
         col++;
         switch (col)
         {
         case 8:
-            dbg(F(" : "));
+            dbg_eep(F(" : "));
             break;
         case 16:
-            dbg(endl);
+            dbg_eep(endl);
             col = 0;
-            if (idx < EEPROM_SIZE - MAX_COL)
+            if (idx < EEPROM.length() - MAX_COL)
             {
-                dbg(_WIDTHZ(_HEX(idx), 3) << F(" : "));
+                dbg_eep(_WIDTHZ(_HEX(idx), 3) << F(" : "));
             }
             break;
         default:
-            dbg(" ");
+            dbg_eep(" ");
             break;
         }
     }
-
-    EEPROM.end();
 
 #endif
 

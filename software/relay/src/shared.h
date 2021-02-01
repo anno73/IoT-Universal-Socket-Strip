@@ -8,8 +8,6 @@
 
 #include <Arduino.h>
 
-
-
 /**
  * The fight on a more verbose enum as there is a compile time conflict with enumerator STATUS.
  * https://en.cppreference.com/w/cpp/language/enum
@@ -30,7 +28,8 @@ namespace iicRegister
         ADDR,
         VERSION,
         // --- Meta values
-        REGCOUNT, // Not really a register but an indicator on how many registers are defined; gets previous value + 1
+        REGCOUNT, // Not really a register but an indicator on how many regular registers are defined; gets previous value + 1
+        SPECIAL,
     };
 }
 
@@ -74,5 +73,16 @@ namespace buttonCmd // Button not implemented
     {
         ENABLE = 0,
         DISABLE,
+    };
+}
+
+namespace specialCmd
+{
+    enum : uint8_t
+    {
+        RESTART,      // Restart the module
+        CLR_EEPROM,   // Set all of EEPROM to 0xFF
+        CLR_IIC_ADDR, // Set IIC_ADDR location in EEPROM to 0xFF
+        CLR_EWL,      // Set EEPROM Wear Level storage to 0xFF
     };
 }
