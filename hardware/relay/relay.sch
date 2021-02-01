@@ -272,26 +272,14 @@ Wire Wire Line
 	8200 4950 8200 5250
 Wire Wire Line
 	7800 5150 7800 5250
-Text Label 6600 2900 0    60   ~ 0
-L1
-Text Label 6600 2700 0    60   ~ 0
-L1/SDA
 Wire Wire Line
 	6600 2700 7000 2700
 Wire Wire Line
 	6600 2900 7000 2900
-Text Label 6600 4650 0    60   ~ 0
-L2/SCL
-Text Label 6600 4850 0    60   ~ 0
-L2
 Wire Wire Line
 	6600 4850 7000 4850
 Wire Wire Line
 	6600 4650 7000 4650
-Text Label 8200 4250 0    60   ~ 0
-R_L2
-Text Label 8200 2250 0    60   ~ 0
-R_L1
 $Comp
 L power:+3.3V #PWR09
 U 1 1 58F159EA
@@ -350,18 +338,6 @@ Wire Wire Line
 	2300 3700 2100 3700
 Wire Wire Line
 	2100 3700 2100 3900
-Text Label 5200 2300 0    60   ~ 0
-#RESET
-Text Label 5200 2200 0    60   ~ 0
-LED_PWM
-Text Label 5200 2100 0    60   ~ 0
-L1
-Text Label 5200 2000 0    60   ~ 0
-L2/SCL
-Text Label 5200 1900 0    60   ~ 0
-L2
-Text Label 5200 1800 0    60   ~ 0
-L1/SDA
 Wire Wire Line
 	5000 1800 5200 1800
 Wire Wire Line
@@ -387,8 +363,6 @@ F 3 "" H 2100 2050 50  0001 C CNN
 $EndComp
 Connection ~ 2100 1800
 Connection ~ 2100 2300
-Text Label 6100 1850 0    60   ~ 0
-LED_PWM
 $Comp
 L power:GND #PWR013
 U 1 1 58F16E75
@@ -416,30 +390,12 @@ Wire Wire Line
 	7500 1300 7400 1300
 Wire Wire Line
 	7400 1300 7400 1400
-Text Label 7000 1200 0    60   ~ 0
-L1/SDA
-Text Label 8200 1200 0    60   ~ 0
-L2/SCL
-Text Label 7000 1100 0    60   ~ 0
-#RESET
 Wire Wire Line
-	7000 1100 7500 1100
+	7000 1100 7100 1100
 Wire Wire Line
 	7000 1200 7500 1200
 Wire Wire Line
 	8000 1200 8200 1200
-Text Label 5200 3700 0    60   ~ 0
-#RESET
-Text Label 5200 3600 0    60   ~ 0
-LED_PWM
-Text Label 5200 3500 0    60   ~ 0
-L1
-Text Label 5200 3400 0    60   ~ 0
-L2/SCL
-Text Label 5200 3300 0    60   ~ 0
-L2
-Text Label 5200 3200 0    60   ~ 0
-L1/SDA
 Wire Wire Line
 	5000 3200 5200 3200
 Wire Wire Line
@@ -465,12 +421,6 @@ Wire Wire Line
 	9800 1700 9550 1700
 Wire Wire Line
 	9800 2000 9550 2000
-Text Label 9550 1700 0    60   ~ 0
-R_NO
-Text Label 9550 1800 0    60   ~ 0
-R_COM
-Text Label 9550 2000 0    60   ~ 0
-R_NC
 $Comp
 L power:+12V #PWR014
 U 1 1 58F2ADE8
@@ -488,14 +438,6 @@ Wire Wire Line
 	9300 3550 9000 3550
 Wire Wire Line
 	9300 3400 9000 3400
-Text Label 9000 3250 2    60   ~ 0
-R_L1
-Text Label 9000 3550 2    60   ~ 0
-R_L2
-Text Label 10100 3100 1    60   ~ 0
-R_NO
-Text Label 10000 3700 3    60   ~ 0
-R_COM
 $Comp
 L 000-local-symbol:HFE20-1-x-1Z-x-x-L2 RL1
 U 1 1 58F2BEAA
@@ -507,8 +449,6 @@ F 3 "" H 9800 3400 50  0001 C CNN
 	1    9800 3400
 	1    0    0    -1  
 $EndComp
-Text Label 9900 3100 1    60   ~ 0
-R_NC
 Wire Wire Line
 	7800 2800 7900 2800
 Wire Wire Line
@@ -588,6 +528,145 @@ F 1 "CONN_01X04" V 10100 1850 50  0000 C CNN
 F 2 "000-local-footprint:SR21504VBNC" H 10000 1850 50  0001 C CNN
 F 3 "" H 10000 1850 50  0001 C CNN
 	1    10000 1850
+	1    0    0    -1  
+$EndComp
+Text GLabel 5200 1800 2    60   Input ~ 0
+L1_SDA
+Text GLabel 7000 1200 0    60   Output ~ 0
+L1_SDA
+Text GLabel 7000 1100 0    60   Input ~ 0
+#RESET
+Text GLabel 8200 1200 2    60   Input ~ 0
+L2_SCL
+Text GLabel 6600 2700 0    60   Input ~ 0
+L1_SDA
+Text GLabel 6600 2900 0    60   Input ~ 0
+L1
+Text GLabel 5200 3200 2    60   Input ~ 0
+L1_SDA
+Text GLabel 5200 3300 2    60   Input ~ 0
+L2
+Text GLabel 5200 3400 2    60   Input ~ 0
+L2_SCL
+Text GLabel 5200 3500 2    60   Input ~ 0
+L1
+Text GLabel 5200 3600 2    60   Input ~ 0
+LED_PWM
+Text GLabel 5200 3700 2    60   Input ~ 0
+#RESET
+Text GLabel 5200 1900 2    60   Input ~ 0
+L2
+Text GLabel 5200 2000 2    60   Input ~ 0
+L2_SCL
+Text GLabel 5200 2100 2    60   Input ~ 0
+L1
+Text GLabel 5200 2200 2    60   Input ~ 0
+LED_PWM
+Text GLabel 5200 2300 2    60   Input ~ 0
+#RESET
+Text GLabel 6100 1850 3    60   Input ~ 0
+LED_PWM
+Text GLabel 9000 3250 0    60   Input ~ 0
+R_L1
+Text GLabel 9000 3550 0    60   Input ~ 0
+R_L2
+Text GLabel 6600 4650 0    60   Input ~ 0
+L2_SCL
+Text GLabel 6600 4850 0    60   Input ~ 0
+L2
+Text GLabel 8200 4250 1    60   Input ~ 0
+R_L2
+Text GLabel 8200 2250 1    60   Input ~ 0
+R_L1
+Text GLabel 9550 1700 0    60   Input ~ 0
+R_NO
+Text GLabel 9550 1800 0    60   Output ~ 0
+R_COM
+Text GLabel 9550 2000 0    60   Input ~ 0
+R_NC
+Text GLabel 9900 3100 1    60   Output ~ 0
+R_NC
+Text GLabel 10100 3100 1    60   Output ~ 0
+R_NO
+Text GLabel 10000 3700 3    60   Input ~ 0
+R_COM
+$Comp
+L Device:R R6
+U 1 1 60199072
+P 7250 1100
+F 0 "R6" V 7330 1100 50  0000 C CNN
+F 1 "10k" V 7250 1100 50  0000 C CNN
+F 2 "Resistors_SMD:R_0805_HandSoldering" V 7180 1100 50  0001 C CNN
+F 3 "" H 7250 1100 50  0001 C CNN
+	1    7250 1100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7400 1100 7500 1100
+$Comp
+L power:PWR_FLAG #FLG0101
+U 1 1 601B2756
+P 3100 900
+F 0 "#FLG0101" H 3100 975 50  0001 C CNN
+F 1 "PWR_FLAG" H 3100 1073 50  0000 C CNN
+F 2 "" H 3100 900 50  0001 C CNN
+F 3 "~" H 3100 900 50  0001 C CNN
+	1    3100 900 
+	-1   0    0    1   
+$EndComp
+$Comp
+L power:PWR_FLAG #FLG0102
+U 1 1 601B3140
+P 3550 900
+F 0 "#FLG0102" H 3550 975 50  0001 C CNN
+F 1 "PWR_FLAG" H 3550 1073 50  0000 C CNN
+F 2 "" H 3550 900 50  0001 C CNN
+F 3 "~" H 3550 900 50  0001 C CNN
+	1    3550 900 
+	-1   0    0    1   
+$EndComp
+$Comp
+L power:PWR_FLAG #FLG0103
+U 1 1 601B3635
+P 4000 900
+F 0 "#FLG0103" H 4000 975 50  0001 C CNN
+F 1 "PWR_FLAG" H 4000 1073 50  0000 C CNN
+F 2 "" H 4000 900 50  0001 C CNN
+F 3 "~" H 4000 900 50  0001 C CNN
+	1    4000 900 
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+3.3V #PWR0104
+U 1 1 601B3B42
+P 3100 900
+F 0 "#PWR0104" H 3100 750 50  0001 C CNN
+F 1 "+3.3V" H 3100 1040 50  0000 C CNN
+F 2 "" H 3100 900 50  0001 C CNN
+F 3 "" H 3100 900 50  0001 C CNN
+	1    3100 900 
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+12V #PWR0105
+U 1 1 601B3FB2
+P 3550 900
+F 0 "#PWR0105" H 3550 750 50  0001 C CNN
+F 1 "+12V" H 3550 1040 50  0000 C CNN
+F 2 "" H 3550 900 50  0001 C CNN
+F 3 "" H 3550 900 50  0001 C CNN
+	1    3550 900 
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR0106
+U 1 1 601B45F6
+P 4000 900
+F 0 "#PWR0106" H 4000 650 50  0001 C CNN
+F 1 "GND" H 4000 750 50  0000 C CNN
+F 2 "" H 4000 900 50  0001 C CNN
+F 3 "" H 4000 900 50  0001 C CNN
+	1    4000 900 
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC
