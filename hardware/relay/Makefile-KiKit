@@ -43,7 +43,9 @@ build/relay_panel.kicad_pcb: build/relay.kicad_pcb
 	echo
 	kikit fab jlcpcb $< $@
 
+	$(eval TARGET ::= $(subst build/,,$@))
 
+	cp $@/gerbers.zip $@/$(TARGET)-gerbers.zip
 
 web: build/web/index.html
 
