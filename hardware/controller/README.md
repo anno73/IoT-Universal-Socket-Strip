@@ -12,4 +12,12 @@ Common reset
 Level Shifter for IIC
 
 
+## IIC
+
+### IIC Level shifter
+
+Bidirectional [Level shifting techniques in I2C-bus design](https://www.nxp.com/docs/en/application-note/AN10441.pdf) for Fast-mode and Standard-mode busses
+
+
+
 
