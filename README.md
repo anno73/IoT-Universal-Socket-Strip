@@ -14,11 +14,9 @@ The controller PCB is ESP8266 based, ideal for integration into your home IoT in
 
 Write firmware
 
-Design power and controller board.
+Design power/controller and relay board.
 
-Reorganize project for git
-
-Hardware, Software, Controller PCB, Switch PCB, Supporting Documents
+Hardware, Software, Controller PCB, Relay PCB, Supporting Documents
 
 
 # Best Practice Tutorials
