@@ -95,6 +95,8 @@ https://arduinodiy.wordpress.com/2015/05/16/high-voltage-programmingunbricking-f
 
 [Nick Gammon - High-voltage programming for AVR chips](http://www.gammon.com.au/forum/?id=12898)
 
+https://github.com/ArminJo/ATtiny-HighVoltageProgrammer_FuseEraser
+
 ### Flash ATTiny85
 
 Arduino as a programmer
