@@ -32,6 +32,8 @@ In addition EEPROMWearLevel library did not compile.
 This was the final reason for me to try a different core package.
 In the end I overwrote core and variant from [Digispark USB](https://docs.platformio.org/en/latest/boards/atmelavr/digispark-tiny.html#board-atmelavr-digispark-tiny) package to tiny and tinyx5 as it is used by the [generic ATTiny85](https://docs.platformio.org/en/latest/boards/atmelavr/attiny85.html#board-atmelavr-attiny85) definitions (see [attiny85.json](https://github.com/platformio/platform-atmelavr/blob/master/boards/attiny85.json)). Keeping the rest as it is, allowed me to program regularly via USB. See [platformio.ini](platformio.ini).
 
+There is a new actively maintained ATTiny85 core available on https://github.com/ArminJo/DigistumpArduino which gives smaller code, has active development, and more stock libraries. I use this now for further development.
+
 #### Include (missing) libs as submodules
 
 As I did not find [SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial) and a current version of [Streaming](https://github.com/janelia-arduino/Streaming) in PlatformIO's library repository, I added these as [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in the library folder.
