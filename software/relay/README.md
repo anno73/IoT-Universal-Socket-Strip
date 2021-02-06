@@ -24,7 +24,7 @@ Does each device need to remember configuration or should it get updated by host
 
 ### Platformio tweaks
 
-#### Switch the package
+#### Switch the platform package
 
 I have encountered some issues with the Digistump avr package. There is missing EEPROM.h library. To resolve this I copied the original library from the arduino avr package to .platformio/packages/framework-avr-digistump/libraries package.
 There is also a lot of unnecessary noise during compilation because of moved header file locations, redefinition of #define BIN and other stuff.
