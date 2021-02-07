@@ -21,6 +21,7 @@
 
 #define MQTT_VERBOSE_HEARTBEAT 0
 #define MQTT_VERBOSE_RECEIVE 0
+#define MQTT_VERBOSE_GET 1
 
 /*
 
@@ -321,7 +322,7 @@ namespace mqtt
                 {
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
-                    Serial << F("MQTT turn socket") << v << F(" off") << endl;
+                    Serial << F("MQTT turn socket ") << v << F(" off") << endl;
                     relay::switchRelay(v, relayCmd::OFF);
                     return;
                 }
@@ -487,33 +488,32 @@ namespace mqtt
                     uint8_t v = strtoul(data.c_str(), NULL, 10);
 
                     // todo get info on relay x
-                    uint8_t status = 0;
-                    uint8_t relay = 1;
-                    uint8_t led = 2;
-                    uint8_t addr = 3;
-                    uint8_t swVers = 4;
+                    uint8_t reg;
 
-                    relay::getModule(v, &status, &relay, &led, &addr, &swVers);
+                    uint8_t status = relay::getRegister(v, iicRegister::RELAY, &reg);
+
+                    if (status)
+                    {
+                        Serial << F("MQTT ERROR: getRegister relay failed for module ") << v << F(" with code 0x") << _HEX(status) << endl;
+                        return;
+                    }
 
                     String topic = mqttTopicPraefix;
                     topic += "/info/relay/status";
 
-                    const int jsonCapacity = JSON_OBJECT_SIZE(10);
+                    const int jsonCapacity = JSON_OBJECT_SIZE(5);
                     StaticJsonDocument<jsonCapacity> doc;
 
                     doc["time"] = ntp::dateTimeStr(time(nullptr), "%Y-%m-%d %H:%M:%S");
                     doc["relay"] = v;
-                    doc["status"] = status;
-                    doc["relay"] = relay;
-                    doc["led"] = led;
-                    doc["addr"] = addr;
-                    doc["swVers"] = swVers;
+                    doc["state"] = bitRead(reg, 0);
+                    doc["frozen"] = bitRead(reg, 1);
 
                     String json;
                     serializeJsonPretty(doc, json);
 
 #if MQTT_VERBOSE_GET > 0
-                    Serial << F("MQTT send heartbeat [") << topic << F("] with ") << json.length() << F(" bytes:\n") << json << endl;
+                    Serial << F("MQTT send response [") << topic << F("] with ") << json.length() << F(" bytes:\n") << json << endl;
 #endif
 
                     json = ""; // serializeJson* APPENDS to target String object!
@@ -524,6 +524,8 @@ namespace mqtt
                     {
                         Serial << F("MQTT publish error: ") << mqttClient.lastError() << ':' << mqttClient.returnCode() << endl;
                     }
+
+                    return;
                 } // get/relay/status
 
                 Serial << F("MQTT unknown relay cmd '") << topic << F("'\n");
