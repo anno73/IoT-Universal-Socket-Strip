@@ -5,7 +5,7 @@
 
 #include "shared.h"
 
-#define DEBUG_EEPROM
+// #define DEBUG_EEPROM
 #define DEBUG_IIC_IO
 #define DEBUG_CONFIG
 
@@ -35,9 +35,11 @@
 const unsigned long txOnlySerialBaudRate = 115200;
 #include <SendOnlySoftwareSerial.h> // https://github.com/nickgammon/SendOnlySoftwareSerial
 #include <Streaming.h>              // https://github.com/janelia-arduino/Streaming
-#define dbg(x) txOnlySerial << x
+// #define dbg(x) txOnlySerial << x
+#define dbg_core(x) txOnlySerial << x
 #else
-#define dbg(x)
+// #define dbg(x)
+#define dbg_core(x)
 #endif
 
 #include "EEPROM.h"
@@ -64,6 +66,9 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 
 #include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html <Watchdog.h> does not support ATTiny85
 
+/**
+ * Forward Declarations
+ */
 void initIic(uint8_t);
 void iicRequestEventCb(void);
 void iicReceiveEventCb(uint8_t);
@@ -236,11 +241,11 @@ volatile uint8_t buttonReg = 0;
 // volatile uint8_t addrReg = 0;    // does not need to be a physical register. Is obtained from EEPROM.
 // volatile uint8_t versionReg = 0; // does not need to be a physical register. Is a constant in the code.
 
-volatile uint8_t iicRegSelected;                  // For read operations persist the selected register across IIC operations
+volatile uint8_t iicRegSelected = 0;              // For read operations persist the selected register across IIC operations
 const uint8_t iicRegSize = iicRegister::REGCOUNT; // How many registers we have defined
 const uint8_t iicRegLastIdx = iicRegSize - 1;     // Index of the last register for wrap around on multiple read/write operations
 
-volatile bool persistIicRegs; // If true, persist register values in main loop
+volatile bool persistIicRegs = false; // If true, persist register values in main loop
 
 /**
  * 
@@ -250,7 +255,8 @@ volatile bool persistIicRegs; // If true, persist register values in main loop
 void ledAction(uint8_t action)
 {
 
-    dbg(F("ledAction: ") << action << endl);
+    // dbg_core(F("ledAction: ") << action << endl);
+    dbg_core(millis() << F(" ledAction: ") << action << endl);
 
     if (bitRead(ledReg, 1) == 0)
     { // LED in follow relay mode. Only some actions allowed:
@@ -373,7 +379,8 @@ void ledAction(uint8_t action)
 void relayAction(uint8_t action)
 {
 
-    dbg(F("relayAction: ") << action << endl);
+    // dbg_core(F("relayAction: ") << action << endl);
+    dbg_core(millis() << F(" relayAction: ") << action << endl);
 
     // If relay is in freeze state then only action allowed is unfreeze
     if (bitRead(relayReg, 1) && (action != relayCmd::UNFREEZE))
@@ -446,9 +453,9 @@ void relayAction(uint8_t action)
  */
 void iicRequestEventCb(void)
 {
-    // uint8_t tmp;
 
-    dbg(F("iicRequestEventCb for reg ") << iicRegSelected << endl);
+    // dbg_iic_io(F("iicRequestEventCb Reg: ") << iicRegSelected << endl);
+    dbg_iic_io(millis() << F(" iicRequestEventCb Reg: ") << iicRegSelected << endl);
 
     switch (iicRegSelected)
     {
@@ -483,6 +490,9 @@ void iicRequestEventCb(void)
         iicRegSelected = 0;
     }
 
+    // dbg_iic_io(F("iicReqCb: response sent. iicRegSelected: ") << iicRegSelected << endl);
+    dbg_iic_io(millis() << F(" iicReqCb: response sent. iicRegSelected: ") << iicRegSelected << endl);
+
 } // iicRequestEventCb
 
 /**
@@ -498,7 +508,8 @@ void iicRequestEventCb(void)
 void iicReceiveEventCb(uint8_t howMany)
 {
 
-    dbg(F("iicReceiveEventCb") << endl);
+    // dbg_iic_io(F("iicReceiveEventCb: ") << howMany << F(" bytes") << endl);
+    dbg_iic_io(millis() << F(" iicReceiveEventCb: ") << howMany << F(" bytes") << endl);
 
     if (howMany < 1)
         // Sanity check
@@ -510,15 +521,23 @@ void iicReceiveEventCb(uint8_t howMany)
 
     iicRegSelected = TinyWireS.receive();
 
-    if ((iicRegSelected >= iicRegLastIdx) and (iicRegSelected != iicRegister::SPECIAL))
-        // Sanity check - non existant register requested
-        return;
+    if (iicRegSelected >= iicRegLastIdx)
+    { // Sanity check - non existant register requested
+        if (iicRegSelected != iicRegister::REGSPECIAL)
+        { // non existant registers get remapped
+            iicRegSelected = iicRegister::STATUS;
+            return;
+        }
+    }
 
     howMany--;
 
     if (!howMany)
+    {
         // This write was only to select the register for next read operation (iicRequestEvent)
+        dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelected << F(" for reading") << endl);
         return;
+    }
 
     // Seems we got a valid write request with at least another byte of data
     // iicRegSelected indicates what register to start with as subsequent received bytes advance to the next register
@@ -527,7 +546,7 @@ void iicReceiveEventCb(uint8_t howMany)
     {
         uint8_t data = TinyWireS.receive();
 
-        dbg(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
+        dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
 
         switch (iicRegSelected)
         {
@@ -593,7 +612,7 @@ void iicReceiveEventCb(uint8_t howMany)
         case iicRegister::VERSION:
             // Ignore writes to VERSION register
             break;
-        case iicRegister::SPECIAL:
+        case iicRegister::REGSPECIAL:
             switch (data)
             {
             case specialCmd::RESTART:
@@ -690,7 +709,7 @@ void readConfigFromEeprom(void)
 /**
  * initIic
  * 
- * Re/Initialize IIC paremeters
+ * Re/Initialize IIC parameters
  */
 void initIic(uint8_t addr)
 {
@@ -705,30 +724,23 @@ void initIic(uint8_t addr)
  */
 void setup()
 {
-    wdt_reset();         // reset watchdog timer
-    wdt_enable(WDTO_1S); // set watchdog timeout
+    // uint8_t mcusr = MCUSR = 0;
+    // wdt_disable(); // deactivate watchdog timer
 
 #ifdef DEBUG_CORE
     txOnlySerial.begin(txOnlySerialBaudRate);
 #endif
 
-    dbg(F("\nRELAY Module --- debug on\n"));
-
-    persistIicRegs = false;
+    dbg_core(endl
+             << F("RELAY Module --- debug on") << endl);
+    // dbg_core(F("MCUSR: ") << _WIDTHZ(_HEX(mcusr), 2) << endl);
 
     // Read config from EEPROM
-    // iicSlaveAddress = 125;
-    // Relay Mode
-    // LED Mode
-    // Button Mode
-
-    // statusReg = 0;
-    // relayReg = 0;
-    // ledReg = 0;
-    // buttonReg = 0;
 
     EEPROMwl.begin(EWL_LAYOUT_VERSION, EWLIDX_COUNT, EWL_USE_BYTES);
     readConfigFromEeprom();
+
+    // todo: set RELAY and LED according to last saved config in EEPROM
 
     pinMode(PIN_RL1, OUTPUT);
     digitalWrite(PIN_RL1, RELAY_COIL_OFF);
@@ -749,6 +761,10 @@ void setup()
     // Initialize IIC
     initIic(iicSlaveAddress);
 
+    // wdt_enable(WDTO_500MS); // set watchdog timeout
+    // wdt_enable(WDTO_1S); // set watchdog timeout
+    // wdt_reset();         // reset watchdog timer
+
 } // setup
 
 /**
@@ -757,6 +773,8 @@ void setup()
  */
 void loop()
 {
+
+    // while (1); // Test watchdog timer
 
     // set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     // sleep_enable();
@@ -771,7 +789,7 @@ void loop()
         dumpEEPROM();
     }
 
-    wdt_reset(); // reset watchdog timer
+    // wdt_reset(); // reset watchdog timer
 
     TinyWireS_stop_check();
 
