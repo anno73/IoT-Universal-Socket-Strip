@@ -35,8 +35,9 @@ namespace relay
      * 
      * Send a single IIC command to relay module
      * 
+     * 
      */
-    uint8_t sendIicCommand(uint8_t address, uint8_t iicReg, uint8_t value, uint8_t *status, uint8_t *tries)
+    uint8_t sendIicCommand(uint8_t address, uint8_t iicReg, int8_t value, uint8_t *status, uint8_t *tries)
     {
         *status = 255;
         *tries = 0;
@@ -57,7 +58,7 @@ namespace relay
         } while ((*status != 0) && (*tries < MAX_IIC_RETRIES));
 
         // All went well
-        if ((*tries) == 0)
+        if ((*status) == 0)
             return 0;
 
         // WARNING: we had to retry the operation
@@ -77,8 +78,9 @@ namespace relay
     {
         // Serial << F("Switch relay ") << relay << F(" to state ") << ((state > 0) ? F("ON") : F("OFF")) << "." << endl;
 
-        uint8_t status = 255;
-        uint8_t tries = 0;
+        uint8_t status;
+        uint8_t tries;
+        uint32_t now = micros();
 
         addr += MODULE_ADDR_OFFSET;
         switch (sendIicCommand(addr, iicRegister::RELAY, state, &status, &tries))
@@ -95,6 +97,9 @@ namespace relay
             //     break;
         }
 
+        uint32_t diff = micros() - now;
+        Serial << "switchRelay: diff " << diff << "us" << endl;
+
         return;
     } // switchRelay
 
@@ -104,8 +109,8 @@ namespace relay
      */
     void switchLed(uint8_t addr, uint8_t state)
     {
-        uint8_t status = 255;
-        uint8_t tries = 0;
+        uint8_t status;
+        uint8_t tries;
 
         addr += MODULE_ADDR_OFFSET;
         switch (sendIicCommand(addr, iicRegister::LED, state, &status, &tries))
@@ -122,6 +127,69 @@ namespace relay
 
         return;
     } // switchLed
+
+    /**
+     * getRegister
+     * 
+     * Read one register/byte from module
+     * 
+     */
+    uint8_t getRegister(uint8_t module, uint8_t regIdx, uint8_t *data)
+    {
+
+        uint8_t status = 255;
+        uint8_t tries = 0;
+
+        uint8_t addr = module + MODULE_ADDR_OFFSET; // map module index to IIC address
+
+        do
+        {
+            uint32_t now = micros();
+            Wire.beginTransmission(addr); // Select register in module to read
+            Wire.write(regIdx);
+            status = Wire.endTransmission();
+            Serial << F("getRegister: IIC call: ") << micros() - now << "us" << endl;
+
+            if (status != 0)
+            {
+                tries++;
+                delay(10);
+            }
+        } while ((status != 0) && (tries < MAX_IIC_RETRIES));
+
+        if (tries >= MAX_IIC_RETRIES)
+        {
+            // there was an error
+            return status;
+        }
+
+        // delay(1); // necessary?
+
+        status = Wire.requestFrom(addr, (uint8_t)1, (uint8_t) true); // Request one byte from module; 3rd parm: true: send stop, false: send restart
+
+        Serial << F("Wire.requestFrom returned ") << status << endl;
+
+        if (status == 0)
+        {
+            Serial << F("getRegister: ERROR: did not receive any data") << endl;
+            return 0x10;
+        }
+
+        // We got some data back
+        if (Wire.available() == 1)
+        {
+            *data = Wire.read();
+            return 0;
+        }
+        else
+        {
+            // We got more data back as expected
+            Serial << F("getRegister: ERROR: expected bytes 1 but got ") << Wire.available() << endl;
+            return 0x20;
+        }
+
+        return 0xA5;
+    } // getRegister
 
     /**
      * setIicAddress
@@ -156,8 +224,8 @@ namespace relay
      */
     uint8_t getModule(uint8_t idx, uint8_t *status, uint8_t *relay, uint8_t *led, uint8_t *addr, uint8_t *swVers)
     {
-        uint8_t response[5];
-        uint8_t res = 0;
+        // uint8_t response[5];
+        // uint8_t res = 0;
 
         // if (idx > socketCnt) return 100;
 
@@ -289,7 +357,9 @@ namespace relay
 
         // Setup IIC
 
-        Wire.begin(PIN_SDA, PIN_SCL);
+        Wire.begin(PIN_SDA, PIN_SCL, 1);  // Init IIC with master address 1
+        Wire.setClock(100000);            // 100kHz clock speed
+        Wire.setClockStretchLimit(40000); // 40ms
 
         // scanIicBus(115, 127);     // Scan address range on IIC bus for existing devices and loop endlessly
         // endlessToggleRelais(125); // debugging IIC communication
@@ -310,7 +380,6 @@ namespace relay
 
         countSockets = freeAddr - MODULE_ADDR_OFFSET;
         Serial << F("First free IIC address: ") << freeAddr << F(" Sockets found: ") << countSockets << endl;
-
 
         // Check if we have new devices on IIC bus and free IIC addresses left
         if (probeIicBusAddr(INITIAL_IIC_ADDRESS) == 0)

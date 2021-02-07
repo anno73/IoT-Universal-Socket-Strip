@@ -32,7 +32,20 @@ AJAX?
 
 https://github.com/me-no-dev/EspExceptionDecoder
 
-## I2C Level shifter
+## I2C 
+
+### Wire library
+
+I encountered persisting problems with reading back data from relay board. What solved it in the end was to add Wire.setClockStretchLimit() after Wire.begin():
+```
+Wire.begin(PIN_SDA, PIN_SCL, 1);  // Init IIC with master address 1
+Wire.setClock(100000);            // 100kHz clock speed
+Wire.setClockStretchLimit(40000); // 40ms
+```
+
+
+
+### I2C Level shifter
 
 ?? Use I2C against 5V rail? ESP8266 is 5V tolerant.
 
