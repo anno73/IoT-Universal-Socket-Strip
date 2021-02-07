@@ -28,8 +28,8 @@ namespace iicRegister
         ADDR,
         VERSION,
         // --- Meta values
-        REGCOUNT, // Not really a register but an indicator on how many regular registers are defined; gets previous value + 1
-        REGSPECIAL,    // SPECIAL already used elsewhere
+        REGCOUNT,   // Not really a register but an indicator on how many regular registers are defined; gets previous value + 1
+        REGSPECIAL, // "hidden" special register - not for normal use --- name SPECIAL already used elsewhere
     };
 }
 
