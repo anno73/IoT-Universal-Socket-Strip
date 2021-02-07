@@ -121,8 +121,12 @@ https://github.com/nickgammon/SendOnlySoftwareSerial
 
 ### debugWire
 
-https://sites.google.com/site/wayneholder/debugwire
-https://www.youtube.com/watch?v=kI_Z78a_0y0
+* https://sites.google.com/site/wayneholder/debugwire
+* https://www.youtube.com/watch?v=kI_Z78a_0y0
+
+### IIC
+
+[SoftI2CMaster](https://github.com/felias-fogg/SoftI2CMaster) provides [I2CShell](https://github.com/felias-fogg/SoftI2CMaster/tree/master/examples/I2CShell) as an example, which is a nice I2C command sending tool for Arduino.
 
 ## Calibrate RC Oscillator
 
