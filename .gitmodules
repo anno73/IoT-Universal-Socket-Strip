@@ -1,6 +1,6 @@
-[submodule "software/relay/lib/.\\SendOnlySoftwareSerial"]
-	path = software/relay/lib/.\\SendOnlySoftwareSerial
+[submodule "software/relay/lib/SendOnlySoftwareSerial"]
+	path = software/relay/lib/SendOnlySoftwareSerial
 	url = https://github.com/nickgammon/SendOnlySoftwareSerial
-[submodule "software/relay/lib/.\\Streaming"]
-	path = software/relay/lib/.\\Streaming
+[submodule "software/relay/lib/Streaming"]
+	path = software/relay/lib/Streaming
 	url = https://github.com/janelia-arduino/Streaming
