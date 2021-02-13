@@ -1,4 +1,4 @@
-# Relay Board Software
+# Relay Board Software 
 
 [ATTiny85](https://www.microchip.com/wwwproducts/en/ATtiny85)
 
@@ -44,7 +44,7 @@ There is a new actively maintained ATTiny85 core available on https://github.com
 
 As I did not find [SendOnlySoftwareSerial](https://github.com/nickgammon/SendOnlySoftwareSerial) and a current version of [Streaming](https://github.com/janelia-arduino/Streaming) in PlatformIO's library repository, I added these as [git submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules) in the library folder.
 See [github blog](https://github.blog/) for more information on [how to work with submodules](https://github.blog/2016-02-01-working-with-submodules/).
-Especially on initial cloning you might need to use `git clone --recursive <project url>`.
+Especially on initial cloning you might need to use `git clone --recursive <project url>`. If you already have cloned the repository and only miss the submodules, `git submodule update --init --recursive` should do the trick.
 
 ### Windows Driver Installation
 
