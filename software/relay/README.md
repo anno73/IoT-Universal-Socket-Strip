@@ -18,6 +18,12 @@
 
 Does each device need to remember configuration or should it get updated by host on power up?
 
+# ToDo
+
+- [ ] Sleep when not active - how to wake up? Pin change interrupt? 
+- [ ] Watchdog timer
+- [ ] Find issue on get requests with interleaving messages / subsequent writes
+
 # Supporting Stuff
 
 ## Digistump Digispark USB Dev
@@ -134,5 +140,16 @@ https://github.com/nickgammon/SendOnlySoftwareSerial
 * https://hackaday.com/2020/12/30/improve-attiny-timing-accuracy-with-this-clock-calibrator/
 * https://hackaday.io/project/176542-tiny-calibrator
 * https://github.com/wagiminator/ATtiny84-TinyCalibrator
+
+## Power saving mode
+
+[ATTiny85 Data sheet](https://ww1.microchip.com/downloads/en/DeviceDoc/Atmel-2586-AVR-8-bit-Microcontroller-ATtiny25-ATtiny45-ATtiny85_Datasheet.pdf) chapters
+* 7 Power Management and Sleep Modes
+* Table 7-1 Active Clock Domains and Wake-up Sources in the Different Sleep Modes
+* 15.3.4 Two-wire Mode
+* 15.3.5 Start Condition Detector
+* 15.5.3 Bit 7 USISIF describes conditions for IIC Start condition waking up the CPU from sleep states.
+
+Minimal power consumption is not required to not interfere with peripherals like LED and relay triggering outputs.
 
 
