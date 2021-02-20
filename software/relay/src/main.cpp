@@ -5,9 +5,10 @@
 
 #include "shared.h"
 
-// #define DEBUG_EEPROM
 #define DEBUG_IIC_IO
+#define DEBUG_CMD
 #define DEBUG_CONFIG
+// #define DEBUG_EEPROM
 
 #ifdef DEBUG_EEPROM
 #define DEBUG_CORE
@@ -21,6 +22,13 @@
 #define dbg_iic_io(x) txOnlySerial << x
 #else
 #define dbg_iic_io(x)
+#endif
+
+#ifdef DEBUG_CMD
+#define DEBUG_CORE
+#define dbg_cmd(x) txOnlySerial << x
+#else
+#define dbg_cmd(x)
 #endif
 
 #ifdef DEBUG_CONFIG
@@ -192,6 +200,9 @@ SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software seri
  *      1: true - commands accepted but discarded
  */
 volatile uint8_t statusReg = 0;
+const uint8_t STATUS_BIT_RELAY = 0;
+const uint8_t STATUS_BIT_LED = 2;
+const uint8_t STATUS_BIT_BUSY = 7;
 
 /**
  * relayReg
@@ -206,6 +217,8 @@ volatile uint8_t statusReg = 0;
  *      1: freeze
  */
 volatile uint8_t relayReg = 0;
+const uint8_t RELAY_BIT_ONOFF = 0;
+const uint8_t RELAY_BIT_FREEZE = 1;
 
 /**
  * ledReg
@@ -229,6 +242,9 @@ volatile uint8_t relayReg = 0;
  *      11
  */
 volatile uint8_t ledReg = 0;
+const uint8_t LED_BIT_ONOFF = 0;
+const uint8_t LED_BIT_FOLLOW = 1;
+const uint8_t LED_BIT_FREEZE = 2;
 
 /**
  * buttonReg
@@ -268,7 +284,7 @@ void ledAction(uint8_t action)
     // dbg_core(F("ledAction: ") << action << endl);
     dbg_core(millis() << F(" ledAction: ") << action << endl);
 
-    if (bitRead(ledReg, 1) == 0)
+    if (bitRead(ledReg, LED_BIT_FOLLOW) == 0)
     { // LED in follow relay mode. Only some actions allowed:
         switch (action)
         {
@@ -284,7 +300,7 @@ void ledAction(uint8_t action)
         }
     }
 
-    if (bitRead(ledReg, 2) == 1)
+    if (bitRead(ledReg, LED_BIT_FREEZE) == 1)
     { // LED in freeze mode. Only some actions allowed:
         switch (action)
         {
@@ -296,7 +312,6 @@ void ledAction(uint8_t action)
         default:
             return;
         }
-        return;
     }
 
     persistIicRegs = true;
@@ -304,29 +319,31 @@ void ledAction(uint8_t action)
     switch (action)
     {
     case ledCmd::RELAY_OFF:
-        bitClear(ledReg, 0);
-        bitClear(statusReg, 2);
+        bitClear(ledReg, LED_BIT_ONOFF);
+        bitClear(statusReg, STATUS_BIT_LED);
 
 #ifndef DEBUG_CORE
+        // In debug mode PIN_LED gets serial output
         digitalWrite(PIN_LED, LED_OFF);
 #endif
         break;
     case ledCmd::RELAY_ON:
-        bitSet(ledReg, 0);
-        bitSet(statusReg, 2);
+        bitSet(ledReg, LED_BIT_ONOFF);
+        bitSet(statusReg, STATUS_BIT_LED);
 
 #ifndef DEBUG_CORE
+        // In debug mode PIN_LED gets serial output
         digitalWrite(PIN_LED, LED_ON);
 #endif
         break;
     case ledCmd::UNFOLLOW_RELAY:
-        bitClear(ledReg, 1);
+        bitClear(ledReg, LED_BIT_FOLLOW);
         break;
     case ledCmd::FOLLOW_RELAY:
-        bitSet(ledReg, 1);
+        bitSet(ledReg, LED_BIT_FOLLOW);
 
         // Initialize LED with current relay state
-        if (bitRead(relayReg, 0) == 0)
+        if (bitRead(relayReg, RELAY_BIT_ONOFF) == 0)
         {
             ledAction(ledCmd::RELAY_OFF);
         }
@@ -336,23 +353,25 @@ void ledAction(uint8_t action)
         }
         break;
     case ledCmd::OFF:
-        bitClear(ledReg, 0);
-        bitClear(statusReg, 0);
+        bitClear(ledReg, LED_BIT_ONOFF);
+        bitClear(statusReg, STATUS_BIT_LED);
 
 #ifndef DEBUG_CORE
+        // In debug mode PIN_LED gets serial output
         digitalWrite(PIN_LED, LED_OFF);
 #endif
         break;
     case ledCmd::ON:
-        bitSet(ledReg, 0);
-        bitSet(statusReg, 2);
+        bitSet(ledReg, LED_BIT_ONOFF);
+        bitSet(statusReg, STATUS_BIT_LED);
 
 #ifndef DEBUG_CORE
+        // In debug mode PIN_LED gets serial output
         digitalWrite(PIN_LED, LED_ON);
 #endif
         break;
     case ledCmd::TOGGLE:
-        if (bitRead(ledReg, 0) == 0)
+        if (bitRead(ledReg, LED_BIT_ONOFF) == 0)
         {
             ledAction(ledCmd::ON);
         }
@@ -362,10 +381,10 @@ void ledAction(uint8_t action)
         }
         break;
     case ledCmd::UNFREEZE:
-        bitClear(ledReg, 2);
+        bitClear(ledReg, LED_BIT_FREEZE);
         break;
     case ledCmd::FREEZE:
-        bitSet(ledReg, 2);
+        bitSet(ledReg, LED_BIT_FREEZE);
         break;
     default:
         // Unknown or unimplemented command
@@ -393,7 +412,7 @@ void relayAction(uint8_t action)
     dbg_core(millis() << F(" relayAction: ") << action << endl);
 
     // If relay is in freeze state then only action allowed is unfreeze
-    if (bitRead(relayReg, 1) && (action != relayCmd::UNFREEZE))
+    if (bitRead(relayReg, RELAY_BIT_FREEZE) && (action != relayCmd::UNFREEZE))
     {
         return;
     }
@@ -403,30 +422,33 @@ void relayAction(uint8_t action)
     switch (action)
     {
     case relayCmd::OFF:
-        // if (bitRead(relayReg, 0) == 0)
-        // break;
-
-        // iicRegs[IIC_REG_STATUS] &= ~1;
-        bitClear(statusReg, 0);
-        bitClear(relayReg, 0);
+        // if (bitRead(relayReg, RELAY_BIT_ONOFF) == 0)
+        // {
+        //     persistIicRegs = false;
+        //     break;
+        // }
+        bitClear(statusReg, STATUS_BIT_RELAY);
+        bitClear(relayReg, RELAY_BIT_ONOFF);
 
         digitalWrite(PIN_RL1, RELAY_COIL_ON);
         tws_delay(RELAY_SWITCH_PULSE_DURATION_MS);
         digitalWrite(PIN_RL1, RELAY_COIL_OFF);
 
-        // digitalWrite(PIN_LED, LED_OFF);
         ledAction(ledCmd::RELAY_OFF);
         break;
     case relayCmd::ON:
-        // iicRegs[IIC_REG_STATUS] |= 1;
-        bitSet(statusReg, 0);
-        bitSet(relayReg, 0);
+        // if (bitRead(relayReg, RELAY_BIT_ONOFF) == 1)
+        // {
+        //     persistIicRegs = false;
+        //     break;
+        // }
+        bitSet(statusReg, STATUS_BIT_RELAY);
+        bitSet(relayReg, RELAY_BIT_ONOFF);
 
         digitalWrite(PIN_RL2, RELAY_COIL_ON);
         tws_delay(RELAY_SWITCH_PULSE_DURATION_MS);
         digitalWrite(PIN_RL2, RELAY_COIL_OFF);
 
-        // digitalWrite(PIN_LED, LED_ON);
         ledAction(ledCmd::RELAY_ON);
         break;
     case relayCmd::TOGGLE:
@@ -440,10 +462,10 @@ void relayAction(uint8_t action)
         }
         break;
     case relayCmd::FREEZE:
-        bitSet(relayReg, 1);
+        bitSet(relayReg, RELAY_BIT_FREEZE);
         break;
     case relayCmd::UNFREEZE:
-        bitClear(relayReg, 1);
+        bitClear(relayReg, RELAY_BIT_FREEZE);
         break;
     default:
         // Unknown or unimplemented command
@@ -562,11 +584,6 @@ void iicReceiveEventCb(uint8_t howMany)
         // Still a pending command to be processed. Ignore this one.
         return;
 
-    // Store the register we want to process
-    // if (cmdBuf.isFull())
-    //     // Command buffer full - drop data and return
-    //     return;
-
     // Store register from above to buffer
     cmdBuf.push(iicRegSelected);
 
@@ -574,16 +591,12 @@ void iicReceiveEventCb(uint8_t howMany)
     // As IIC buffer size == cmdBuffer size, there cannot be an overrun
     while (howMany--)
     {
-        // if (cmdBuf.isFull())
-        //     // Command buffer full - drop data and return
-        //     return;
-
         // Store data to buffer
         cmdBuf.push(TinyWireS.receive());
     }
 
     // Set command in progress flag in staus register
-    bitSet(statusReg, 7);
+    bitSet(statusReg, STATUS_BIT_BUSY);
 
     return;
 } // iicReceiveEventCb
@@ -592,6 +605,7 @@ void iicReceiveEventCb(uint8_t howMany)
  * processCommand
  * 
  * Process one command stored in cmdBuf.
+ * Buffer cleanup happens by caller.
  * 
  */
 void processCommand(void)
@@ -605,7 +619,7 @@ void processCommand(void)
 
     uint8_t iicRegSelected = cmdBuf.shift();
 
-    // Currently we only have commands with one additional data byte
+    // Currently we only have commands with two bytes: [ register, data ]
     if (cmdBuf.isEmpty())
     {
         // No databyte left
@@ -616,7 +630,7 @@ void processCommand(void)
     {
         uint8_t data = cmdBuf.shift();
 
-        dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
+        dbg_cmd(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
 
         switch (iicRegSelected)
         {
@@ -860,6 +874,7 @@ void loop()
         // cmdBuf.shift();
         processCommand();
 
+        // Consolidate persisting into one operation as multiple changes can have happened.
         if (persistIicRegs)
         {
             ewlSaveConfig();
@@ -868,10 +883,16 @@ void loop()
             dumpEEPROM();
         }
 
-        // Clear command pending satus bit
-        bitClear(statusReg, 7);
-        // Just in case there are any remants after processing command, clear the buffer.
-        cmdBuf.clear();
+        { // Atomic operation - sort of - use block to make it explicit
+            noInterrupts();
+
+            // Clear command pending satus bit
+            bitClear(statusReg, STATUS_BIT_BUSY);
+            // Just in case there are any remnants after processing command, clear the buffer.
+            cmdBuf.clear();
+
+            interrupts();
+        }
     }
     // wdt_reset(); // reset watchdog timer
 
