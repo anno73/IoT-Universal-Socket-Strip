@@ -187,13 +187,7 @@ SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software seri
  * 2: led status
  *      0: off
  *      1: on
-<<<<<<< HEAD
- * 7: command pending
- *      0: false
- *      1: true
-=======
  * 7: busy - cannot accept command --- ???!!!
->>>>>>> ded08d35989935d7bec3f35c2d7083849ae373cd
  */
 volatile uint8_t statusReg = 0;
 
@@ -604,7 +598,6 @@ void processCommand(void)
     if (cmdBuf.isEmpty())
     {
         // Empty buffer, no command to process
-        bitClear(statusReg, 7);
         return;
     }
 
@@ -614,7 +607,6 @@ void processCommand(void)
     if (cmdBuf.isEmpty())
     {
         // No databyte left
-        bitClear(statusReg, 7);
         return;
     }
 
@@ -723,9 +715,6 @@ void processCommand(void)
         }
 
     } // while (!cmdBuf.isEmpty())
-
-    // Clear command pending satus bit
-    bitClear(statusReg, 7);
 
     return;
 } // processCommand
@@ -863,20 +852,25 @@ void loop()
     // sleep_mode();
     // sleep_disable();
 
+    // Check in buffer if there was a command received via IIC
     while (!cmdBuf.isEmpty())
     {
         // cmdBuf.shift();
         processCommand();
+
+        if (persistIicRegs)
+        {
+            ewlSaveConfig();
+            persistIicRegs = false;
+
+            dumpEEPROM();
+        }
+
+        // Clear command pending satus bit
+        bitClear(statusReg, 7);
+        // Just in case there are any remants after processing command, clear the buffer.
+        cmdBuf.clear();
     }
-
-    if (persistIicRegs)
-    {
-        ewlSaveConfig();
-        persistIicRegs = false;
-
-        dumpEEPROM();
-    }
-
     // wdt_reset(); // reset watchdog timer
 
     TinyWireS_stop_check();
