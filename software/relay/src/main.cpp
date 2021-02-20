@@ -64,6 +64,11 @@ const unsigned int EEPIDX_IICADDR = 511; // Absolute EEPROM index
 #define TWI_RX_BUFFER_SIZE (16)
 #endif
 
+#define CIRCULAR_BUFFER_INT_SAFE
+#include <CircularBuffer.h> // https://github.com/rlogiacco/CircularBuffer
+
+CircularBuffer<uint8_t, TWI_RX_BUFFER_SIZE> cmdBuf; // Command buffer for processing IIC commands in main loop.
+
 #include <avr/wdt.h> // avr-libc watchdog library https://www.nongnu.org/avr-libc/user-manual/group__avr__watchdog.html <Watchdog.h> does not support ATTiny85
 
 /**
@@ -182,6 +187,9 @@ SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software seri
  * 2: led status
  *      0: off
  *      1: on
+ * 7: command pending
+ *      0: false
+ *      1: true
  */
 volatile uint8_t statusReg = 0;
 
@@ -241,15 +249,17 @@ volatile uint8_t buttonReg = 0;
 // volatile uint8_t addrReg = 0;    // does not need to be a physical register. Is obtained from EEPROM.
 // volatile uint8_t versionReg = 0; // does not need to be a physical register. Is a constant in the code.
 
-volatile uint8_t iicRegSelected = 0;              // For read operations persist the selected register across IIC operations
+volatile uint8_t iicRegSelectedRead = 0;          // For read operations persist the selected register across IIC operations
 const uint8_t iicRegSize = iicRegister::REGCOUNT; // How many registers we have defined
 const uint8_t iicRegLastIdx = iicRegSize - 1;     // Index of the last register for wrap around on multiple read/write operations
-
-volatile bool persistIicRegs = false; // If true, persist register values in main loop
+                                                  //
+volatile bool persistIicRegs = false;             // If true, persist register values in main loop
 
 /**
- * 
  * ledAction
+ * 
+ * Execute actions/configs on LED
+ *  ON/OFF/TOGGLE/...
  * 
  */
 void ledAction(uint8_t action)
@@ -454,10 +464,10 @@ void relayAction(uint8_t action)
 void iicRequestEventCb(void)
 {
 
-    // dbg_iic_io(F("iicRequestEventCb Reg: ") << iicRegSelected << endl);
-    dbg_iic_io(millis() << F(" iicRequestEventCb Reg: ") << iicRegSelected << endl);
+    // dbg_iic_io(F("iicRequestEventCb Reg: ") << iicRegSelectedREad << endl);
+    dbg_iic_io(millis() << F(" iicRequestEventCb Reg: ") << iicRegSelectedRead << endl);
 
-    switch (iicRegSelected)
+    switch (iicRegSelectedRead)
     {
     case iicRegister::STATUS:
         TinyWireS.send(statusReg);
@@ -482,16 +492,16 @@ void iicRequestEventCb(void)
     }
 
     // Increment the reg position on each read, and loop back to zero
-    iicRegSelected++;
+    iicRegSelectedRead++;
 
     // Treat registers as ring buffer. Check for possible wrap around and handle it.
-    if (iicRegSelected >= iicRegLastIdx)
+    if (iicRegSelectedRead >= iicRegLastIdx)
     {
-        iicRegSelected = 0;
+        iicRegSelectedRead = 0;
     }
 
     // dbg_iic_io(F("iicReqCb: response sent. iicRegSelected: ") << iicRegSelected << endl);
-    dbg_iic_io(millis() << F(" iicReqCb: response sent. iicRegSelected: ") << iicRegSelected << endl);
+    dbg_iic_io(millis() << F(" iicReqCb: response sent. iicRegSelected: ") << iicRegSelectedRead << endl);
 
 } // iicRequestEventCb
 
@@ -519,13 +529,13 @@ void iicReceiveEventCb(uint8_t howMany)
         // Sanity check - should no occur really
         return;
 
-    iicRegSelected = TinyWireS.receive();
+    uint8_t iicRegSelected = TinyWireS.receive();
 
     if (iicRegSelected >= iicRegLastIdx)
     { // Sanity check - non existant register requested
         if (iicRegSelected != iicRegister::REGSPECIAL)
-        { // non existant registers get remapped
-            iicRegSelected = iicRegister::STATUS;
+        { // non existant registers get remapped / ignored
+            // iicRegSelected = iicRegister::STATUS;
             return;
         }
     }
@@ -535,16 +545,74 @@ void iicReceiveEventCb(uint8_t howMany)
     if (!howMany)
     {
         // This write was only to select the register for next read operation (iicRequestEvent)
-        dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelected << F(" for reading") << endl);
+        iicRegSelectedRead = iicRegSelected;
+
+        dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelectedRead << F(" for reading") << endl);
         return;
     }
 
     // Seems we got a valid write request with at least another byte of data
     // iicRegSelected indicates what register to start with as subsequent received bytes advance to the next register
 
+    if (!cmdBuf.isEmpty())
+        // Still a pending command to be processed. Ignore this one.
+        return;
+
+    // Store the register we want to process
+    // if (cmdBuf.isFull())
+    //     // Command buffer full - drop data and return
+    //     return;
+
+    // Store register from above to buffer
+    cmdBuf.push(iicRegSelected);
+
+    // Copy data to buffer for processing in main loop
+    // As IIC buffer size == cmdBuffer size, there cannot be an overrun
     while (howMany--)
     {
-        uint8_t data = TinyWireS.receive();
+        // if (cmdBuf.isFull())
+        //     // Command buffer full - drop data and return
+        //     return;
+
+        // Store data to buffer
+        cmdBuf.push(TinyWireS.receive());
+    }
+
+    // Set command in progress flag in staus register
+    bitSet(statusReg, 7);
+
+    return;
+} // iicReceiveEventCb
+
+/**
+ * processCommand
+ * 
+ * Process one command stored in cmdBuf.
+ * 
+ */
+void processCommand(void)
+{
+
+    if (cmdBuf.isEmpty())
+    {
+        // Empty buffer, no command to process
+        bitClear(statusReg, 7);
+        return;
+    }
+
+    uint8_t iicRegSelected = cmdBuf.shift();
+
+    // Currently we only have commands with one additional data byte
+    if (cmdBuf.isEmpty())
+    {
+        // No databyte left
+        bitClear(statusReg, 7);
+        return;
+    }
+
+    while (!cmdBuf.isEmpty())
+    {
+        uint8_t data = cmdBuf.shift();
 
         dbg_iic_io(F("iicRecCb: Reg: ") << iicRegSelected << " Data: " << data << endl);
 
@@ -644,9 +712,13 @@ void iicReceiveEventCb(uint8_t howMany)
             iicRegSelected = 0;
         }
 
-    } // while (howMany--)
+    } // while (!cmdBuf.isEmpty())
 
-} // iicReceiveEventCb
+    // Clear command pending satus bit
+    bitClear(statusReg, 7);
+
+    return;
+} // processCommand
 
 /**
  * ewlSaveConfig
@@ -780,6 +852,12 @@ void loop()
     // sleep_enable();
     // sleep_mode();
     // sleep_disable();
+
+    while (!cmdBuf.isEmpty())
+    {
+        // cmdBuf.shift();
+        processCommand();
+    }
 
     if (persistIicRegs)
     {
