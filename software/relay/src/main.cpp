@@ -187,7 +187,9 @@ SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software seri
  * 2: led status
  *      0: off
  *      1: on
- * 7: busy - cannot accept command --- ???!!!
+ * 7: busy - cannot accept command
+ *      0: false - commands accepted
+ *      1: true - commands accepted but discarded
  */
 volatile uint8_t statusReg = 0;
 
