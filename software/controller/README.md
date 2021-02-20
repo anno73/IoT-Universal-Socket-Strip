@@ -36,7 +36,7 @@ https://github.com/me-no-dev/EspExceptionDecoder
 
 ### Wire library
 
-I encountered persisting problems with reading back data from relay board. What solved it in the end was to add Wire.setClockStretchLimit() after Wire.begin():
+I encountered persisting problems with reading data from relay board. What solved it in the end was to add Wire.setClockStretchLimit() after Wire.begin():
 ```
 Wire.begin(PIN_SDA, PIN_SCL, 1);  // Init IIC with master address 1
 Wire.setClock(100000);            // 100kHz clock speed

@@ -187,9 +187,13 @@ SendOnlySoftwareSerial txOnlySerial(PIN_LED); // Reuse LED pin for software seri
  * 2: led status
  *      0: off
  *      1: on
+<<<<<<< HEAD
  * 7: command pending
  *      0: false
  *      1: true
+=======
+ * 7: busy - cannot accept command --- ???!!!
+>>>>>>> ded08d35989935d7bec3f35c2d7083849ae373cd
  */
 volatile uint8_t statusReg = 0;
 
@@ -514,6 +518,10 @@ void iicRequestEventCb(void)
  * This needs to complete before the next incoming transaction (start, data, restart/stop) on the bus does
  * so be quick, set flags for long running tasks to be called from the mainloop instead of running them directly
  * 
+ * todo: Ignore IIC request while command still pending.
+ * Alternative: ignore any additional write command as long one is still pending. Exception: write new address for reading e.g. STATUS register.
+ * Would require to persist data across calls as TinyWireS is not redundant, it has only one data buffer for TinyWireS.receive.
+ * 
  */
 void iicReceiveEventCb(uint8_t howMany)
 {
@@ -619,6 +627,8 @@ void processCommand(void)
         switch (iicRegSelected)
         {
             // We only allow operation on one attribute at a time
+            // An alternate approach would be to XOR new data with register value and process all commands corresponding to set bits.
+            // The long running code really should get moved out of here. Might solve the timing issue in a more elegant way.
 
         // case iicRegister::STATUS:
         // Ignore writes to STATUS register
